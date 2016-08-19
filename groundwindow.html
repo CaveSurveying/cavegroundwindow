@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Groundwindow</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+      body { margin: 0px; overflow: hidden; }
+      #viz { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
+      #quantbutton { position: absolute; right:0; top: 0; border: thin red solid; background:#ddf; display: block }
+      #quantshow { position: absolute; right:0; top: 0; width: 75%; bo0rder: thin red solid; background:#ddf; display: block }
+      #quantshowtext { font-size: 200%; position: relative; left: 0; top: 0; display: none }
+      #postext { position: relative; left: 0; top: 0; display: block }
+      #postext input, #quantbutton input { font-size: 150%}
+      #dcamara { position: absolute; left: 0; bottom: 0; width:50%; height:50%; display: none; background: red }
+      #camara { width:100%; height:100%;  }
+    </style>
+    <link rel="manifest" href="manifest.json">
+    <script src="three.min.js"></script>
+    <script src="DeviceOrientationControls.js?2"></script>
+    <!--script src="all3d.js"></script-->
+    <script src="allleck3d.js"></script>
+    <script src="positionfuncs.js"></script>
+    <script src="pickingfuncs.js"></script>
+    <script src="shaders.js"></script>
+  </head>
+  <body>
+    <div id="main">
+      <div id="viz"></div>
+      <div id="quantbutton">
+        <input type="button" value="Q" id="qshow"/>
+        <span id="debugtext"></span>
+      </div>
+      <div id="quantshow">
+        <div id="quantshowtext">TEE</div>
+        <div id="postext">
+          <div id="numpanel">
+              <span id="gpsrec">Dgps</span>
+              <span id="gpsrecV">Dgps</span>
+              <span id="testout">:</span>
+              <span id="testout2">__</span>
+          </div>
+          <div>
+              <input type="button" value="Hop" id="camerahop"/>
+              <input type="button" value="Cen" id="reset31"/>
+              <input type="button" value="Mag" id="magorientset"/>
+              <input type="button" value="See" id="camera"/>
+              <input type="button" value="Lab" id="labelsonoff"/>
+              <input type="button" value="Top" id="highabove"/>
+              <input type="button" value="9999" id="yearcycle"/>
+          </div>
+        </div>
+      </div>
+      <div id="dcamara">
+        <video id="camara" autoplay controls></video>
+      </div>
+    </div>
+  
+  <script>
+//function getshader(k) { document.getElementById(k).textContent; };
+function getshader(k) { return shaders[k]; };
+      
+var basepositionOrigin, latR, lngR, altR, latG, lngG, altG; 
+var nyfac, nxfac, eyfac, exfac, lat0, lng0, alt0, camera3JSAlt; 
+function SetBasePositions()
+{
+    latG = basepositionOrigin[1]; 
+    lngG = basepositionOrigin[2]; 
+    altG = basepositionOrigin[3]; 
+    latR = 0; 
+    lngR = 0; 
+    altR = 0; 
+    lat0 = basepositionOrigin[1]; 
+    lng0 = basepositionOrigin[2]; 
+    alt0 = basepositionOrigin[3]; 
+    
+    var earthrad = 6378137; 
+    nyfac = 2*Math.PI*earthrad/360; 
+    nxfac = 0; 
+    eyfac = 0; 
+    exfac = nyfac*Math.cos(lat0*Math.PI/180); 
+    
+    PositionObject.SetCameraPositionG();
+}
+
+function reset31(event) 
+{
+    event.preventDefault(); 
+    if ((latR != 0) && (latR != 0.0000001)) {
+        latR = 0.0000001;   // prevents retrigger of set in geo_set
+        lngR = 0; 
+        altR = 0; 
+        quantshowshow("Moving GPS origin back to reality"); 
+    } else {
+        latR = latG - lat0; 
+        lngR = lngG - lng0; 
+        altR = altG - alt0; 
+        quantshowshow("Moving GPS origin to the caves"); 
+    }
+    PositionObject.SetCameraPositionG(); 
+    quantshowhidedelay(1500); 
+    return false; 
+}
+
+function HighTopView()
+{
+    GdeviceOrientation.gamma = 0.1;   // required for alpha to change position
+    GdeviceOrientation.beta = 0; 
+    GdeviceOrientation.alpha = -90; 
+    PositionObject.geo_set(latG, lngG, altG + 10000, 0, 0);  
+}
+
+var camera, scene, renderer, controls, threejselement, vizcontainer;
+var quantshowelement, quantshowtextelement, postextelement; 
+var clock = new THREE.Clock();
+var hoptime = null; 
+var hopmode = 0; // 0 on ground, 1 going up, -1 going down, 2 on the up
+var linewidth = 3; 
+var hopheight = 1500.0; 
+function ZhopGo(lhopheight) 
+{
+    if (hopmode == 0)
+        hopheight = lhopheight; 
+    hopmode = (hopmode == 0 ? 1 : -1); 
+    hoptime = clock.elapsedTime; 
+}
+function Zhopdisplacement() 
+{
+    if (hopmode === 0)
+        return 0.0; 
+    if (hopmode === 2)
+        return hopheight; 
+    if (hoptime === null)
+        return 0.0; 
+    var hsecs = clock.elapsedTime - hoptime; 
+    if (hsecs > 2) {
+        hoptime = null; 
+        hopmode = (hopmode == 1 ? 2 : 0); 
+        return (hopmode === 2 ? hopheight : 0); 
+    }
+    var x = Math.abs((hsecs-2)/2); 
+    if (hopmode == -1)
+        x = 1 - x; 
+    var y = (x < 0.5 ? (1 - x*x*2) : (1 - x)*(1 - x)*2); 
+    return hopheight*y; 
+}
+
+function latlngtopt(lat, lng, alt)
+{
+    var rlat = lat - lat0; 
+    var rlng = lng - lng0; 
+    return new THREE.Vector3(-(rlat*eyfac + rlng*exfac), alt, +(rlat*nyfac + rlng*nxfac)); 
+}
+
+
+var textlabelmaterials = [ ]; 
+function MakeLabel(card, text, fillstyle, p, scale)
+{
+    var canvas1 = document.createElement('canvas');
+    canvas1.width = 256;  canvas1.height = 32; 
+    var context1 = canvas1.getContext('2d');
+    context1.font = "28px Helvetica";
+    context1.fillStyle = fillstyle;
+    context1.fillText(text, 0, 20); 
+
+// this one we can highlight it individually with a selection boolean
+    var texture1 = new THREE.Texture(canvas1);  
+    texture1.needsUpdate = true; 
+    var textlabelmaterial = new THREE.ShaderMaterial({
+        uniforms: { pixelsize: {type: 'f', value: 1.2}, 
+                    aspect: { type: 'f', value: 1.0 },
+                    textureaspect: { type: 'f', value: canvas1.width/canvas1.height }, 
+                    texture: { value: texture1 },
+                    closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
+                    closedist: { type: 'f', value: 5.0 },  
+                    redalt: { type: 'f', value: redalt },
+                    vfac: { type: 'f', value: vfac } 
+                  }, 
+        vertexShader: getshader('vertex_shader_textlabel'),
+        fragmentShader: getshader('fragment_shader_textlabel'), 
+        depthWrite:true, depthTest:true, 
+        side: THREE.DoubleSide
+    }); 
+    textlabelmaterials.push(textlabelmaterial); 
+
+    var textlabelpositionsbuff = new THREE.BufferAttribute(new Float32Array(4*3), 3);
+    var textlabeluvsbuff = new THREE.BufferAttribute(new Float32Array(4*2), 2);
+    for (var i = 0; i < 4; i++) {
+        textlabelpositionsbuff.setXYZ(i, p.x, p.y, p.z); 
+        textlabeluvsbuff.setXY(i, ((i == 0) || (i == 2) ? 0.0 : 1.0), (i <= 1 ? 0.0 : 1.0)); 
+    }
+    var indices = new Uint16Array(6);
+    indices[0] = 0; indices[1] = 1; indices[2] = 2; 
+    indices[3] = 1; indices[4] = 3; indices[5] = 2; 
+    var buffergeometry = new THREE.BufferGeometry(); 
+    buffergeometry.setIndex(new THREE.BufferAttribute(indices, 1));
+    buffergeometry.addAttribute('position', textlabelpositionsbuff);
+    buffergeometry.addAttribute('uv', textlabeluvsbuff);
+    mesh1 = new THREE.Mesh(buffergeometry, textlabelmaterial); 
+    card.add(mesh1);
+}
+
+var peaktrianglematerial; 
+function LoadMountains(scene)
+{
+    var peakpositionbuff = new THREE.BufferAttribute(new Float32Array(peaks.length*9), 3); 
+    var peakcorner = new Float32Array(peaks.length*3); 
+    
+    var card = new THREE.Object3D();
+    for (var i = 0; i < peaks.length; i++) {
+        var p = latlngtopt(peaks[i][1], peaks[i][2], peaks[i][3]); 
+        peakpositionbuff.setXYZ(i*3, p.x, p.y, p.z);  peakpositionbuff.setXYZ(i*3+1, p.x, p.y, p.z);  peakpositionbuff.setXYZ(i*3+2, p.x, p.y, p.z); 
+        peakcorner[i*3] = 0.0;  peakcorner[i*3+1] = 1.0;  peakcorner[i*3+2] = 2.0; 
+
+        MakeLabel(card, peaks[i][0], "rgba(255,255,255,0.95)", p, 10); 
+    }
+    scene.add(card);
+    
+    buffergeometry = new THREE.BufferGeometry(); 
+    buffergeometry.addAttribute('position', peakpositionbuff); 
+    buffergeometry.addAttribute('pcorner', new THREE.BufferAttribute(peakcorner, 1)); 
+    peaktrianglematerial = new THREE.ShaderMaterial({
+        uniforms: { trianglesize: {type: 'f', value: 15.0}, 
+                    aspect: { type: 'f', value: 1.0 }
+                  }, 
+        vertexShader: getshader('vertexShader_peaktriangle'),
+        depthWrite:true, depthTest:true, 
+        side: THREE.DoubleSide
+    }); 
+    
+    var peaktriangles = new THREE.Mesh(buffergeometry, peaktrianglematerial);  
+    scene.add(peaktriangles); 
+}
+
+var centrelinematerial; 
+var centrelinebuffergeometry; 
+var minyearvalue = 9999.0, maxyearvalue = 9999.0; 
+var minaltvalue = 0.0, maxaltvalue = 0.0; 
+function LoadCentrelines(scene)
+{
+    centrelinematerial = new THREE.ShaderMaterial({
+        uniforms: { closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
+                    closedist: { type: 'f', value: 5.0 }, 
+                    yeartime: { type: 'f', value: 9999.0 },
+                    selectedvsvxcaveindex: { type: 'f', value: -1.0 }, 
+                    redalt: { type: 'f', value: redalt },
+                    vfac: { type: 'f', value: vfac } 
+                  }, 
+        vertexShader: getshader('vertexShader_centreline'),
+        fragmentShader: getshader('fragment_shader_centreline'), 
+        depthWrite:true, depthTest:true,  // not sure these work
+        linewidth:3 
+    });
+    var centrelinepositionsbuff = new THREE.BufferAttribute(new Float32Array(svxlegs.length*2*3), 3);
+    var cosslope = new Float32Array(svxlegs.length*2); 
+    var svxcaveindex = new Float32Array(svxlegs.length*2); 
+    var svxyearvalue = new Float32Array(svxlegs.length*2); 
+    for (var i = 0; i < svxlegs.length; i++) {
+        var svxleg = svxlegs[i]; 
+        var p0 = latlngtopt(svxleg[0], svxleg[1], svxleg[2]); 
+        var p1 = latlngtopt(svxleg[3], svxleg[4], svxleg[5]); 
+        centrelinepositionsbuff.setXYZ(i*2, p0.x, p0.y, p0.z); 
+        centrelinepositionsbuff.setXYZ(i*2+1, p1.x, p1.y, p1.z); 
+        var dx = p1.x - p0.x, dy = p1.y - p0.y, dz = p1.z - p0.z; 
+        var lcosslope = Math.cos(Math.atan2(dy, Math.sqrt(dx*dx + dz*dz))); 
+        cosslope[i*2] = lcosslope; 
+        cosslope[i*2+1] = lcosslope; 
+        svxcaveindex[i*2] = svxleg[6]; 
+        svxcaveindex[i*2+1] = svxleg[6]; 
+        svxyearvalue[i*2] = svxleg[7]; 
+        svxyearvalue[i*2+1] = svxleg[7]; 
+        
+        if (svxleg[7] != 1900) {
+            if ((i == 0) || (svxleg[7] < minyearvalue))  minyearvalue = svxleg[7]; 
+            if ((i == 0) || (svxleg[7] > maxyearvalue))  maxyearvalue = svxleg[7]; 
+        }
+        
+        if ((i == 0) || (svxleg[2] < minaltvalue))  minaltvalue = svxleg[2]; 
+        if (            (svxleg[5] < minaltvalue))  minaltvalue = svxleg[5]; 
+        if ((i == 0) || (svxleg[2] > minaltvalue))  maxaltvalue = svxleg[2]; 
+        if (            (svxleg[5] > minaltvalue))  maxaltvalue = svxleg[5]; 
+    }
+    centrelinebuffergeometry = new THREE.BufferGeometry(); 
+    centrelinebuffergeometry.addAttribute('position', centrelinepositionsbuff);
+    centrelinebuffergeometry.addAttribute('cosslope', new THREE.BufferAttribute(cosslope, 1)); 
+    centrelinebuffergeometry.addAttribute('svxcaveindex', new THREE.BufferAttribute(svxcaveindex, 1)); 
+    centrelinebuffergeometry.addAttribute('svxyearvalue', new THREE.BufferAttribute(svxyearvalue, 1)); 
+
+    var contour = new THREE.LineSegments(centrelinebuffergeometry, centrelinematerial);  
+    scene.add(contour); 
+}
+
+var enttrianglematerial; 
+var entgeometry; 
+var entlabelscard = null; 
+function LoadEntrances(scene)
+{
+    var entpositionbuff = new THREE.BufferAttribute(new Float32Array(svxents.length*9), 3); 
+    var entcorner = new Float32Array(svxents.length*3); 
+    var svxcaveindex = new Float32Array(svxents.length*3); 
+    
+    entgeometry = new THREE.BufferGeometry(); 
+    entgeometry.addAttribute('position', entpositionbuff); 
+    entgeometry.addAttribute('pcorner', new THREE.BufferAttribute(entcorner, 1)); 
+    entgeometry.addAttribute('svxcaveindex', new THREE.BufferAttribute(svxcaveindex, 1)); 
+    enttrianglematerial = new THREE.ShaderMaterial({
+        uniforms: { trianglesize: {type: 'f', value: 10.0}, 
+                    aspect: { type: 'f', value: 1.0 }, 
+                    closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
+                    closedist: { type: 'f', value: 5.0 }, 
+                    selectedvsvxcaveindex: { type: 'f', value: -1.0 }, 
+                    redalt: { type: 'f', value: redalt },
+                    vfac: { type: 'f', value: vfac } 
+                  }, 
+        vertexShader: getshader('vertex_shader_enttriangle'),
+        fragmentShader: getshader('fragment_shader_centreline'), 
+        depthWrite:true, depthTest:true, 
+        side: THREE.DoubleSide
+    }); 
+    var enttriangles = new THREE.Mesh(entgeometry, enttrianglematerial);  
+    scene.add(enttriangles); 
+
+    entlabelscard = new THREE.Object3D();
+    for (var i = 0; i < svxents.length; i++) {
+        var p = latlngtopt(svxents[i][1], svxents[i][2], svxents[i][3]); 
+        entpositionbuff.setXYZ(i*3, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+1, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+2, p.x, p.y, p.z); 
+        entcorner[i*3] = 0.0;  entcorner[i*3+1] = 1.0;  entcorner[i*3+2] = 2.0; 
+        svxcaveindex[i*3] = svxents[i][4];  svxcaveindex[i*3+1] = svxents[i][4];  svxcaveindex[i*3+2] = svxents[i][4]; 
+        
+        if (svxents[i][0].match(/p\d+[a-z]?$/) !== null) {
+            MakeLabel(entlabelscard, svxents[i][0], "rgba(0,200,200,0.95)", p, 0.5);  // rgba(0,200,200,0.95)
+        }
+    }
+    scene.add(entlabelscard);
+}
+
+
+var backgroundscene = null, backgroundcamera = null; 
+var videotexture; 
+var backgroundvideo = null; 
+window.URL = window.URL || window.webkitURL; 
+navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia; 
+var bshowvideobackground = false; 
+function LoadVideoBackground()
+{
+    if (bshowvideobackground) {
+        bshowvideobackground = false; 
+        return; 
+    }
+    if (backgroundscene) {
+        bshowvideobackground = true; 
+        return; 
+    }
+        
+    backgroundvideo = document.createElement("video"); 
+    backgroundvideo.width = vizcontainer.offsetWidth; 
+    backgroundvideo.height = vizcontainer.offsetHeight; 
+    backgroundvideo.autoplay = true; 
+    
+    navigator.getUserMedia({"audio":false, "video":true}, function(streamVideo) { 
+        backgroundvideo.src = window.URL.createObjectURL(streamVideo); 
+        //alert(backgroundvideo.src); 
+        videotexture = new THREE.Texture(backgroundvideo); 
+        var backgroundmesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2, 0), new THREE.MeshBasicMaterial({map: videotexture})); 
+        backgroundmesh.material.depthTest = false; 
+        backgroundmesh.material.depthWrite = false; 
+        backgroundscene = new THREE.Scene(); 
+        backgroundcamera = new THREE.Camera(); 
+        backgroundscene.add(backgroundcamera); 
+        backgroundscene.add(backgroundmesh); 
+        bshowvideobackground = true; 
+    }, function() { alert("bad"); }); 
+}
+
+
+function resize() 
+{
+    var width = vizcontainer.offsetWidth;
+    var height = vizcontainer.offsetHeight;
+    camera.aspect = width / height;
+    peaktrianglematerial.uniforms.aspect.value = camera.aspect; 
+    peaktrianglematerial.uniforms.trianglesize.value = 10/height; 
+    enttrianglematerial.uniforms.aspect.value = camera.aspect; 
+    enttrianglematerial.uniforms.trianglesize.value = 5/width; 
+    for (var i = 0; i < textlabelmaterials.length; i++) {
+        textlabelmaterials[i].uniforms.aspect.value = camera.aspect; 
+        textlabelmaterials[i].uniforms.pixelsize.value = 60/width; 
+    }
+    camera.updateProjectionMatrix();
+    renderer.setSize(width, height);
+}
+
+
+function update(dt) 
+{
+    resize();
+    camera.updateProjectionMatrix();
+    controls.update(dt);
+}
+
+function render(dt) 
+{
+    renderer.autoClear = false; 
+    renderer.clear(); 
+    if (bshowvideobackground && backgroundscene) {
+        if (backgroundvideo.readyState === backgroundvideo.HAVE_ENOUGH_DATA) {
+            videotexture.needsUpdate = true; 
+        }
+        renderer.render(backgroundscene, backgroundcamera);
+    }
+    renderer.render(scene, camera);
+}
+
+var yeartimestep = 0; 
+function animate(t) 
+{
+    if (hopmode !== 0)
+        camera.position.y = camera3JSAlt + Zhopdisplacement(); 
+    //$("#camerapos").text("cam:"+camera.position.x.toFixed(1)+" "+camera.position.y.toFixed(1)+" "+camera.position.z.toFixed(1))
+    requestAnimationFrame(animate);
+    if  ((touchmovestate == 1) && (clock.elapsedTime - touchtime > 1)) {
+        touchmovestate = 5; 
+        PickingObject.selecteffort(touchStart.x, touchStart.y, "fromanimate")
+    }
+    var cd = clock.getDelta(); 
+    if (yeartimestep != 0) {
+        centrelinematerial.uniforms.yeartime.value = Math.min(maxyearvalue+1, Math.max(minyearvalue, centrelinematerial.uniforms.yeartime.value + cd*yeartimestep)); 
+        document.getElementById("yearcycle").value = centrelinematerial.uniforms.yeartime.value; 
+        if ((centrelinematerial.uniforms.yeartime.value >= maxyearvalue+1) && (yeartimestep > 0))
+            yeartimestep = 0; 
+    }
+    
+    update(cd);
+    render(cd);
+}
+
+function tryabsoluteorient(event)
+{
+    window.removeEventListener('absolutedeviceorientation', tryabsoluteorient);  
+    quantshowshow("**"); 
+    console.log("absoluteorient", event); 
+    quantshowtextelement.textContent = "gting "+event.alpha.toFixed(1)+" "+event.absolute; 
+    if ((event.alpha !== null) && event.absolute) {
+        controls.alphaoffset = event.alpha - GdeviceOrientation.alpha; // GdeviceOrientation is global var accessing deviceOrientation within the controls library
+        quantshowtextelement.textContent = "AA-offs: "+controls.alphaoffset.toFixed(1); 
+    }
+    quantshowhidedelay(1500); 
+}
+
+var quantshowhidetimeout = null; 
+function quantshowhide()  
+{
+    quantshowelement.style.display = "none";  
+    if (quantshowhidetimeout !== null) {
+        clearTimeout(quantshowhidetimeout);  
+        quantshowhidetimeout = null; 
+    }
+}
+function quantshowhidedelay(dt)  { if (quantshowhidetimeout === null)  quantshowhidetimeout = setTimeout(quantshowhide, dt);  }
+function quantshowshow(qtext)  
+{ 
+    if (quantshowhidetimeout !== null) {
+        clearTimeout(quantshowhidetimeout);  
+        quantshowhidetimeout = null; 
+    }
+    quantshowelement.style.display = "block"; 
+    if (qtext) {
+        quantshowtextelement.textContent = qtext; 
+        quantshowtextelement.style.display = "block"; 
+        postextelement.style.display = "none"; 
+    } else {
+        quantshowtextelement.style.display = "none"; 
+        postextelement.style.display = "block"; 
+    }
+}
+
+function setclosedistvalue(closedistvalue)
+{
+    centrelinematerial.uniforms.closedist.value = closedistvalue; 
+    enttrianglematerial.uniforms.closedist.value = closedistvalue; 
+    for (var i = 0; i < textlabelmaterials.length; i++) 
+        textlabelmaterials[i].uniforms.closedist.value = closedistvalue; 
+}
+
+
+var touchStart = new THREE.Vector2(), touchEnd = new THREE.Vector2(), touchDelta = new THREE.Vector2();
+var alphaoffsetStart, touchtime; 
+var touchmovestate = 0; // 1 is touchdrag, 2 is dragging left-right for alpha compass rotate, 3 for depth of fogbrightness, 4 pinch for FOV change, 5 for point selection
+function touchstartfunc(event) 
+{
+    event.stopPropagation(); 
+    touchtime = clock.elapsedTime; 
+    if (event.touches.length == 1) {
+        touchStart.set(event.touches[0].pageX, event.touches[0].pageY); 
+        touchmovestate = 1; // pre-single move, but don't know direction of drag
+    } else if ((event.touches.length == 2) && (touchmovestate <= 1)) {
+        touchStart.set(event.touches[1].pageX - event.touches[0].pageX, event.touches[1].pageX - event.touches[0].pageY); 
+        touchmovevalueStart = camera.fov; 
+        quantshowshow("**"); 
+        touchmovestate = 4; 
+    }
+}
+
+
+function touchholdfunc(event) 
+{ 
+    event.preventDefault(); 
+    event.stopPropagation(); 
+    if (touchmovestate == 1) {
+        touchmovestate = 5; 
+        PickingObject.selecteffort(event.pageX, event.pageY, "contextevent"); 
+    }
+    return false 
+}; 
+
+function touchmovefunc(event)
+{
+    event.preventDefault(); 
+    event.stopPropagation(); 
+    var touchmovepixelsrequired = 20; 
+    if (event.touches.length == 1) {
+        touchEnd.set(event.touches[0].pageX, event.touches[0].pageY);
+        touchDelta.subVectors(touchEnd, touchStart); 
+        if ((touchmovestate == 1) && (Math.max(Math.abs(touchDelta.x), Math.abs(touchDelta.y)*2) > touchmovepixelsrequired)) {
+            touchmovestate = (Math.abs(touchDelta.x) >= Math.abs(touchDelta.y) ? 2 : 3); 
+            touchmovevalueStart = (touchmovestate == 2 ? controls.alphaoffset : centrelinematerial.uniforms.closedist.value); 
+            quantshowshow("**");   // drops through
+            //if (touchmovestate == 2)
+            //    controls.alphalock = true; 
+        }
+        if  ((touchmovestate == 1) && (clock.elapsedTime - touchtime > 1)) {
+            touchmovestate = 5; 
+            PickingObject.selecteffort(touchStart.x, touchStart.y, "touchholdmove")
+        }
+
+        if (touchmovestate == 2) {
+            //controls.alpha += THREE.Math.degToRad(touchDelta.x*0.1);  // didnt work
+            //touchStart.set(touchEnd.x, touchEnd.y); // make incremental so the holding flag within the controls can also work
+            controls.alphaoffset = touchmovevalueStart + touchDelta.x*0.3;  
+            quantshowtextelement.textContent = "A-offs: "+controls.alphaoffset.toFixed(0); 
+        } else if (touchmovestate == 3) {
+            setclosedistvalue(Math.max(0.0, touchmovevalueStart - Math.max(1.0, touchmovevalueStart)*touchDelta.y*0.02)); 
+            quantshowtextelement.textContent = "Light: "+(centrelinematerial.uniforms.closedist.value).toFixed(0)+"m"; 
+        }
+    } else if (event.touches.length == 2) {
+        if (touchmovestate == 4) {
+            touchEnd.set(event.touches[1].pageX - event.touches[0].pageX, event.touches[1].pageX - event.touches[0].pageY); 
+            camera.fov = Math.min(175.0, Math.max(1.0, touchmovevalueStart*(touchStart.length()/touchEnd.length()))); 
+            quantshowtextelement.textContent = "FOV: "+camera.fov.toFixed(0)+"deg"; 
+        }
+    }
+    return false; 
+}
+
+function touchendfunc(event)
+{
+    event.preventDefault(); 
+    //if (touchmovestate == 2)
+    //    controls.alphalock = false; 
+    if (touchmovestate > 0)
+        quantshowhidedelay(1500); 
+    touchmovestate = 0; 
+}
+
+var accthresh = 6.0; 
+var sumaccz = 0.0; 
+var isumaccz = 0; 
+var hopsuppresstime = 0.0; 
+var maxaccz = 0; 
+function devorientationevent(event)
+{
+    if (event.acceleration.z > accthresh) {
+        if (event.acceleration.z > maxaccz) {
+            maxaccz = event.acceleration.z; 
+        }
+    } else if (event.acceleration.z < -accthresh) {
+        if (event.acceleration.z < maxaccz) {
+            maxaccz = event.acceleration.z; 
+        }
+    } else {
+        if ((maxaccz > 0.0) && (hopmode == 0)) {
+            if (hopsuppresstime > clock.elapsedTime) { 
+                ZhopGo((maxaccz-5.5)*(maxaccz-5.5)*300); 
+                document.getElementById('debugtext').textContent = maxaccz.toFixed(3); 
+            }
+        } else if (maxaccz < 0.0) {
+            if (hopmode == 2) {
+                ZhopGo(0); 
+            } else {
+                hopsuppresstime = clock.elapsedTime + 2; 
+            }
+        }
+        maxaccz = 0.0; 
+    }
+}
+
+
+var keylatlngstep = 0.0003; 
+var keyaltstep = 10.0; 
+function init() 
+{
+    renderer = new THREE.WebGLRenderer();
+    threejselement = renderer.domElement;
+    vizcontainer = document.getElementById('viz');
+    vizcontainer.appendChild(threejselement);
+    quantshowelement = document.getElementById('quantshow'); 
+    quantshowtextelement = document.getElementById('quantshowtext'); 
+    postextelement = document.getElementById('postext'); 
+    
+    scene = new THREE.Scene();
+    var fieldofview = 30; // degrees (smaller is more tunnel like)
+    var aspect = 1;       // reset in resize()
+    var neardistance = 5; 
+    var fardistance = 70000; 
+    camera = new THREE.PerspectiveCamera(fieldofview, aspect, neardistance, fardistance);
+    camera3JSAlt = alt0; 
+    camera.position.set(0, camera3JSAlt, 0); 
+    scene.add(camera); 
+
+    SetBasePositions(); 
+
+    controls = new THREE.DeviceOrientationControls(camera, true);
+    controls.connect();
+    controls.update();
+    window.addEventListener('keydown', function(event) { 
+        var mv = { }; 
+        if (event.keyCode == 37)       mv[event.shiftKey ? "x" : "rx"] = -1;   // left cursor
+        else if (event.keyCode == 39)  mv[event.shiftKey ? "x" : "rx"] = 1;    // right cursor
+        else if (event.keyCode == 38)  mv[event.shiftKey ? "z" : "rz"] = 1;    // up cursor
+        else if (event.keyCode == 40)  mv[event.shiftKey ? "z" : "rz"] = -1;   // down cursor
+        else if (event.keyCode == 33)  mv[event.shiftKey ? "y" : "ry"] = 1;    // page up
+        else if (event.keyCode == 34)  mv[event.shiftKey ? "y" : "ry"] = -1;   // page down
+        if (mv.rx || mv.ry || mv.rz)  {
+            if (mv.rx)  GdeviceOrientation.gamma += mv.rx*5; 
+            if (mv.rz)  GdeviceOrientation.beta += mv.rz*5; 
+            if (mv.ry)  GdeviceOrientation.alpha += mv.ry*5; 
+        } else if (mv.x || mv.y || mv.z) {
+            PositionObject.geo_set(latG + (mv.z|0)*keylatlngstep, lngG + (mv.x|0)*keylatlngstep, altG + (mv.y|0)*keyaltstep, 0, 0);  
+        }
+    });
+
+    
+    var light = new THREE.PointLight(0xffffff);
+    light.position.set(0, 2500, 0);
+    scene.add(light);
+
+    LoadMountains(scene); 
+    LoadCentrelines(scene); 
+    LoadEntrances(scene); 
+    //PositionObject.LoadTrail(scene); 
+    PositionObject.LoadTrailRods(scene); 
+    PositionObject.LoadFootpos(scene); 
+    //PositionObject.LoadPickPos(scene); 
+    //LoadVideoBackground(); 
+    
+    scene.fog = new THREE.Fog(0x202020, 10, 20000);  // near and far
+        
+    document.getElementById("camerahop").addEventListener("click", function() { ZhopGo(1500); }); 
+    document.getElementById("reset31").addEventListener("click", reset31); 
+    document.getElementById("camera").addEventListener("click", LoadVideoBackground); 
+    document.getElementById("magorientset").addEventListener("click", function(event) { event.preventDefault(); window.addEventListener('absolutedeviceorientation', tryabsoluteorient); }); 
+    document.getElementById("highabove").addEventListener("click", HighTopView); 
+    
+    
+    document.getElementById("labelsonoff").addEventListener("click", function(event) { entlabelscard.visible = !entlabelscard.visible; PositionObject.footposmesh.visible = !PositionObject.footposmesh.visible; }); 
+    document.getElementById("yearcycle").addEventListener("click", function(event) { yeartimestep = (yeartimestep == -1.0 ? 1.0 : -1.0); }); 
+
+    quantshowelement.addEventListener("click", quantshowhide, true); // so that the preventdefault stops it hiding
+    document.getElementById("qshow").addEventListener("click", function(event) { quantshowshow(false); }); 
+
+    vizcontainer.addEventListener('touchstart', touchstartfunc, false);
+    vizcontainer.addEventListener('touchend', touchendfunc, false);
+    vizcontainer.addEventListener('touchcancel', touchendfunc, false);
+    vizcontainer.addEventListener('touchmove', touchmovefunc, false);
+    vizcontainer.addEventListener('contextmenu', touchholdfunc, false); 
+
+    window.addEventListener('resize', resize);
+    window.addEventListener('devicemotion', devorientationevent, false);
+
+    setTimeout(resize, 1);
+}
+
+init();
+animate();
+
+// add GPS reader to this or do fake positions
+// [must put anonymous functions in here to get this=obect rather than PositionObject.geo_success pointer directly which gets this=Window]
+var watchID = navigator.geolocation.watchPosition(function(p) { PositionObject.geo_success(p); }, function() { PositionObject.geo_error(); }, {enableHighAccuracy:true, timeout:17000, maximumAge:20000}); 
+//navigator.geolocation.watchPosition(function(p) { document.getElementById('testout2').textContent = p.coords.altitude; }, function() { document.getElementById('testout2').textContent = "E"; }, {enableHighAccuracy:true, timeout:27000, maximumAge:30000}); 
+//fakegpsgenerator(); // for desktop use
+
+  </script>
+  </body>
+</html>
+

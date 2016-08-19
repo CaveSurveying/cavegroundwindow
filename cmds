@@ -1,0 +1,143 @@
+http://tinyurl.com/jzjxvmu  is http://goatchurchprime.github.io/cardboardlike/groundwindow.html
+
+// * unhosted.org
+
+// * simplify is js code (baseposition as smaller, and  
+// * move more of the javascript into js files and objects
+// * do Philip's conversion stuff
+// * conversion code to note multiple node names for a node
+// * why isn't the touch screen working on computer?
+
+// * tunnel: make the badsvx case work
+// * handle . survey stations
+// * handle alias to . survey stations
+
+
+// things to do
+// * explain the alt discrepancy in the GPS reading
+// * find what GPS reading should be the vent valley entrance
+// * altG etc into the positionobject
+
+
+*fix	3c20ae	69907.233	77407.244	268.392	;sdE 0.0007m, sdN 0.0005m, sdElev 0.0013m
+GPS readings were 54.195764  -2.5627084   275 (but in system is 322)
+getting readings in field of 140 from gpsstatus 187 on app   -- always 47m too high!
+
+
+
+
+
+// * datalogging picture into the talk slides
+// * tunnocks entrance photo
+// * go through again and copy to phone and then to Becka's computer
+
+// * sump diving picture
+// * charging of batteries, gopros
+// * load up bos3 waypoints onto 6030
+
+
+// * initialize with high view looking down
+// * trail should work with key motions
+// * dot trail to spawn off the dots from current position
+// * offset the positions of everything by the base position origin
+// * vfac and redalt say it's about the colours
+// * provide an offset and digit rounding to the java file to shorten it
+// * separate makefiles for the svx on loser and on leckfell
+// * other peaks in view into database (put them into the svx files as visible peaks if possible???)
+// * assign date attribute onto legs as a year float
+// * provide option of which cave data to load
+// * make the camera view slightly faded (would require specual shader rather that basicmaterial)
+// * break file into different javascript files
+// * derive length and depth when plotting a cave 
+// * light up the entrance labels that match as well
+// * picking of cave passage as well
+// * small hops and sideways hops (in relation to the screen, poss using the accelerometer)
+// * Rauchercan data -- can't find
+// * put some passage widths into the picture using attributes
+// * do the mag check early on on startup
+// * set up links to caves
+
+
+// done
+// * dot tracking changed to vertical lines from sea level
+// * the north position thing  set gamma=0.1
+// * move the shaders into own compiled include file
+// * leck fell to have entrance names and separate caves
+// * check out the WestKingsdaleSystem and make all works -- move the all.svx to the top level NorthernCaves
+// * scale colours for the altitude
+// * recalc the latest survey data from expo
+// * make yorkshire include file [needs cs setting in that file]
+// * analyse underground camping data
+// * move mountains into include file
+// * background image from camera
+// * picking to be its own class in another javascript file
+// * make this work off the github.io webpage
+// * find out why the 204 and 161 entrances are not all joined up
+// * hard-coded fake position offset mode
+// * click to find cave
+// * drop straight into data if miles away
+// * sort out aspect ratio when picking a point in xy
+// * picking (possibly light up a cave)
+// * put the cave index as attribute to entrances and legs
+// * clean version of data without fake cave junk
+// * make the open out bit a button on the top right
+// * when dragging the alpha, fix the position even when device is moving (given up)
+// * set gfac to 1.0
+// * landing feet underneath you and poss compass rose
+// * make the info panel pop up and disappear 
+// * bigger buttons that pop up and go down
+// * pinch zoom for FOV
+// * make the light up of words nice 
+// * swipe up to handle close and far bits
+// * minimized three.js
+// * remove query load
+// * get line width handled in fragment shader
+// * use magnetometer to set start point
+// * disable screen drag in phone orientation
+// * cave entrance daggers of same colour as passage
+// * depth colour spectrum implemented in shader
+// * closest point fog case
+// * vertical lines darker as if overhead light
+// ** upgrade tunnelx on expo laptop
+// ** make the open svx work by calling the correct svx file
+
+
+// copy the file to the phone
+
+adb push groundwindow.html /storage/emulated/legacy/Cardboard/
+
+// generate gps flight from igc file in Python
+
+fname = "/home/goatchurch/hgstuff/2016-06-25-loserdachstein/66OB0913.IGC"
+Blines = [ ]
+for l in open(fname):
+    if l[0] == 'B':
+        utime = int(l[1:3])*3600+int(l[3:5])*60+int(l[5:7])
+        latminutes1000 = int(l[7:9])*60000+int(l[9:11])*1000+int(l[11:14])
+        lngminutes1000 = (int(l[15:18])*60000+int(l[18:20])*1000+int(l[20:23]))*(l[23]=='E' and 1 or -1) 
+        alt10 = int(l[25:31])
+        altbaro = int(l[31:])
+        Blines.append((utime, latminutes1000, lngminutes1000, alt10, altbaro))
+
+gpslocs = [ (latminutes1000/60000, lngminutes1000/60000, alt10*0.1)  for utime, latminutes1000, lngminutes1000, alt10, altbaro in Blines ]
+fout = open("/home/goatchurch/geom3d/cardboardlike/dachflightgps.js", "w")
+fout.write("var igcflight = [\n")
+for lat, lng, alt in gpslocs[:-1]:
+    fout.write("    [%f, %f, %.0f],\n" % (lat, lng, alt))
+fout.write("    [%f, %f, %.0f]\n" % gpslocs[-1])
+fout.write("];\n")
+fout.close()
+
+
+report issue:
+
+proj4js doesn't take d value in lon_0
+
+eg I believe this should be valid (and it works in eg pyproj):
+
++proj=tmerc +lat_0=0 +lon_0=13d20 +k=1 +x_0=0 +y_0=-5200000 +ellps=bessel +towgs84=577.326,90.129,463.919,5.137,1.474,5.297,2.4232
+
+but proj4js fails unless you replace the 13d20 with 13.33333
+
+
+

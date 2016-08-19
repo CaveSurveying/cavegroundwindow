@@ -1,0 +1,139 @@
+  <script id="fragment_shader_centreline" type="x-shader/x-fragment">
+uniform vec4 closecolour; 
+uniform float closedist; 
+uniform float selectedvsvxcaveindex; 
+uniform float yeartime; 
+uniform float redalt; // deltph shading colours
+uniform float vfac; 
+varying float altitude; 
+varying float vcosslope; 
+varying float vsvxcaveindex; 
+varying float vsvxyearvalue; 
+float midlump(float v, float offset) 
+{
+    float lv = (mod(v*vfac + offset, 1.0) - 0.5)/0.5; 
+    return clamp(1.0 - lv*lv, 0.0, 1.0); 
+}
+void main(void) 
+{
+    const float yearwhite = 180.0/365.0; 
+    if (vsvxyearvalue > yeartime)
+        discard; 
+    float redalt = 0.1; 
+    vec4 ptcolour = vec4(midlump(altitude, redalt), midlump(altitude, redalt-0.667)*0.98, midlump(altitude, redalt-0.333), 1.0); 
+    vec4 sptcolour = mix(ptcolour, vec4(0.0, 0.0, 0.0, 1.0), 0.6*(1.0-vcosslope)); 
+    float fdepth = gl_FragCoord.z / gl_FragCoord.w; 
+    float cfac = clamp((closedist - fdepth)*0.1, 0.0, 0.81); 
+    if (vsvxyearvalue > yeartime - yearwhite)
+        cfac = 0.91; 
+    if (vsvxcaveindex == selectedvsvxcaveindex)
+        gl_FragColor = mix(sptcolour, vec4(0.0, 1.0, 1.0, 1.0), 0.8); 
+    else
+        gl_FragColor = mix(sptcolour, closecolour, cfac); 
+}
+  </script>
+  <script id="vertexShader_centreline" type="x-shader/x-vertex">
+attribute float cosslope; 
+attribute float svxcaveindex; 
+attribute float svxyearvalue; 
+varying float altitude; 
+varying float vcosslope; 
+varying float vsvxcaveindex; 
+varying float vsvxyearvalue; 
+void main()
+{
+    altitude = position.y; 
+    vcosslope = cosslope; 
+    vsvxcaveindex = svxcaveindex;  
+    vsvxyearvalue = svxyearvalue; 
+    vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+    gl_Position = projectionMatrix * mvPosition; 
+}
+  </script>
+
+
+
+  <script id="fragment_shader_textlabel" type="x-shader/x-fragment">
+uniform vec4 closecolour; 
+uniform float closedist; 
+uniform sampler2D texture;
+varying vec2 vUv;
+void main() 
+{
+    vec2 uv = vec2(vUv.x, vUv.y);
+    vec3 color = texture2D(texture, uv).rgb;
+    if (color.y == 0.0)
+        discard; 
+    vec4 sptcolour = vec4(color, 1.0);
+
+    // color.y >= 0.5 separates out the aliased dark part of the text texture from the internal pixels of the letters
+    float fdepth = gl_FragCoord.z / gl_FragCoord.w; 
+    float cfac = clamp((closedist - fdepth)*0.1, 0.0, 0.81); 
+    gl_FragColor = mix(sptcolour, closecolour, (color.y >= 0.5 ? cfac : 0.0)); 
+}
+  </script>
+  
+  
+  <script id="vertex_shader_textlabel" type="x-shader/x-fragment">
+uniform float aspect; 
+uniform float pixelsize; 
+uniform float textureaspect; 
+varying vec2 vUv;
+void main()
+{
+    vUv = uv;
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mvPosition; 
+    float spixelsize = pixelsize*gl_Position.z; 
+    gl_Position.x += uv.x*spixelsize*textureaspect; 
+    gl_Position.y += uv.y*spixelsize*aspect; 
+}
+  </script>
+
+
+  <script id="vertexShader_peaktriangle" type="x-shader/x-vertex">
+uniform float trianglesize; 
+uniform float aspect; 
+attribute float pcorner; 
+void main()
+{
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mvPosition; 
+    float strianglesize = trianglesize*gl_Position.z; 
+    if (pcorner != 0.0) {
+        // this is now attempting to draw the triangle fixed even with spin rotation of the screen
+        gl_Position += projectionMatrix*viewMatrix[1]*(-strianglesize) + projectionMatrix*viewMatrix[0]*((pcorner == 1.0 ? 1.0 : -1.0) * 0.57735*strianglesize); 
+        //gl_Position.y += strianglesize*aspect; 
+        //gl_Position.x += (pcorner == 1.0 ? 1.0 : -1.0) * 0.57735*strianglesize; 
+    }
+}
+  </script>
+  
+
+  <script id="vertex_shader_enttriangle" type="x-shader/x-vertex">
+uniform float trianglesize; 
+uniform float aspect; 
+attribute float pcorner; 
+attribute float svxcaveindex; 
+varying float altitude; 
+varying float vcosslope; 
+varying float vsvxcaveindex; 
+varying float vsvxyearvalue; 
+void main()
+{
+    altitude = position.y; 
+    vcosslope = 1.0; 
+    vsvxcaveindex = svxcaveindex; 
+    vsvxyearvalue = 9999.0; 
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * mvPosition; 
+    float strianglesize = trianglesize*gl_Position.z*10.0; 
+    if (pcorner != 0.0) {
+        gl_Position.y += strianglesize*aspect; 
+        gl_Position.x += (pcorner == 1.0 ? 1.0 : -1.0) * 0.57735*strianglesize*0.5; 
+    }
+}
+  </script>
+  
+  
+  
