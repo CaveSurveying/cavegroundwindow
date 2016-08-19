@@ -19,7 +19,7 @@
     <script src="three.min.js"></script>
     <script src="DeviceOrientationControls.js?2"></script>
     <!--script src="all3d.js"></script-->
-    <script src="allleck3d.js"></script>
+    <script src="maxpleasure2.js"></script>
     <script src="positionfuncs.js"></script>
     <script src="pickingfuncs.js"></script>
     <script src="shaders.js"></script>
@@ -59,9 +59,14 @@
   <script>
 //function getshader(k) { document.getElementById(k).textContent; };
 function getshader(k) { return shaders[k]; };
+
+var vfac = 0.003972, redalt = 0.894682;
       
-var basepositionOrigin, latR, lngR, altR, latG, lngG, altG; 
+var basepositionOrigin = [0,0,0]; 
+var latR, lngR, altR, latG, lngG, altG; 
 var nyfac, nxfac, eyfac, exfac, lat0, lng0, alt0, camera3JSAlt; 
+
+
 function SetBasePositions()
 {
     latG = basepositionOrigin[1]; 
@@ -107,7 +112,7 @@ function HighTopView()
     GdeviceOrientation.gamma = 0.1;   // required for alpha to change position
     GdeviceOrientation.beta = 0; 
     GdeviceOrientation.alpha = -90; 
-    PositionObject.geo_set(latG, lngG, altG + 10000, 0, 0);  
+    PositionObject.geo_set(latG, lngG, altG + 100, 0, 0);  
 }
 
 var camera, scene, renderer, controls, threejselement, vizcontainer;
@@ -251,20 +256,29 @@ function LoadCentrelines(scene)
         depthWrite:true, depthTest:true,  // not sure these work
         linewidth:3 
     });
-    var centrelinepositionsbuff = new THREE.BufferAttribute(new Float32Array(svxlegs.length*2*3), 3);
-    var cosslope = new Float32Array(svxlegs.length*2); 
-    var svxcaveindex = new Float32Array(svxlegs.length*2); 
-    var svxyearvalue = new Float32Array(svxlegs.length*2); 
-    for (var i = 0; i < svxlegs.length; i++) {
-        var svxleg = svxlegs[i]; 
-        var p0 = latlngtopt(svxleg[0], svxleg[1], svxleg[2]); 
-        var p1 = latlngtopt(svxleg[3], svxleg[4], svxleg[5]); 
-        centrelinepositionsbuff.setXYZ(i*2, p0.x, p0.y, p0.z); 
-        centrelinepositionsbuff.setXYZ(i*2+1, p1.x, p1.y, p1.z); 
-        var dx = p1.x - p0.x, dy = p1.y - p0.y, dz = p1.z - p0.z; 
+    
+    var nlegs = svxlegindexes.length/2; 
+    var centrelinepositionsbuff = new THREE.BufferAttribute(new Float32Array(nlegs*2*3), 3);
+    var cosslope = new Float32Array(nlegs*2); 
+    var svxcaveindex = new Float32Array(nlegs*2); 
+    var svxyearvalue = new Float32Array(nlegs*2); 
+    var svxscaleInv = 1.0/svxscale;
+    for (var i = 1; i < nlegs; i++) {
+        var i0 = svxlegindexes[i*2]*3; 
+        var i1 = svxlegindexes[i*2+1]*3; 
+        var x0 = svxnodes[i0+1]*svxscaleInv, y0=svxnodes[i0+2]*svxscaleInv, z0=-svxnodes[i0]*svxscaleInv; 
+        var x1 = svxnodes[i1+1]*svxscaleInv, y1=svxnodes[i1+2]*svxscaleInv, z1=-svxnodes[i1]*svxscaleInv; 
+        
+        //var p0 = latlngtopt(svxleg[0], svxleg[1], svxleg[2]); 
+        //var p1 = latlngtopt(svxleg[3], svxleg[4], svxleg[5]); 
+        centrelinepositionsbuff.setXYZ(i*2, x0, y0, z0); 
+        centrelinepositionsbuff.setXYZ(i*2+1, x1, y1, z1); 
+console.log(x0,y0,z0, x1,y1,z1);         
+        var dx = x1 - x0, dy = y1 - y0, dz = z1 - z0; 
         var lcosslope = Math.cos(Math.atan2(dy, Math.sqrt(dx*dx + dz*dz))); 
         cosslope[i*2] = lcosslope; 
         cosslope[i*2+1] = lcosslope; 
+        /*
         svxcaveindex[i*2] = svxleg[6]; 
         svxcaveindex[i*2+1] = svxleg[6]; 
         svxyearvalue[i*2] = svxleg[7]; 
@@ -279,6 +293,7 @@ function LoadCentrelines(scene)
         if (            (svxleg[5] < minaltvalue))  minaltvalue = svxleg[5]; 
         if ((i == 0) || (svxleg[2] > minaltvalue))  maxaltvalue = svxleg[2]; 
         if (            (svxleg[5] > minaltvalue))  maxaltvalue = svxleg[5]; 
+        */
     }
     centrelinebuffergeometry = new THREE.BufferGeometry(); 
     centrelinebuffergeometry.addAttribute('position', centrelinepositionsbuff);
@@ -378,10 +393,14 @@ function resize()
     var width = vizcontainer.offsetWidth;
     var height = vizcontainer.offsetHeight;
     camera.aspect = width / height;
-    peaktrianglematerial.uniforms.aspect.value = camera.aspect; 
-    peaktrianglematerial.uniforms.trianglesize.value = 10/height; 
-    enttrianglematerial.uniforms.aspect.value = camera.aspect; 
-    enttrianglematerial.uniforms.trianglesize.value = 5/width; 
+    if (peaktrianglematerial) {
+        peaktrianglematerial.uniforms.aspect.value = camera.aspect; 
+        peaktrianglematerial.uniforms.trianglesize.value = 10/height; 
+    }
+    if (enttrianglematerial) {
+        enttrianglematerial.uniforms.aspect.value = camera.aspect; 
+        enttrianglematerial.uniforms.trianglesize.value = 5/width; 
+    }
     for (var i = 0; i < textlabelmaterials.length; i++) {
         textlabelmaterials[i].uniforms.aspect.value = camera.aspect; 
         textlabelmaterials[i].uniforms.pixelsize.value = 60/width; 
@@ -644,9 +663,9 @@ function init()
     light.position.set(0, 2500, 0);
     scene.add(light);
 
-    LoadMountains(scene); 
+    //LoadMountains(scene); 
     LoadCentrelines(scene); 
-    LoadEntrances(scene); 
+    //LoadEntrances(scene); 
     //PositionObject.LoadTrail(scene); 
     PositionObject.LoadTrailRods(scene); 
     PositionObject.LoadFootpos(scene); 
