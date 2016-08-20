@@ -19,7 +19,6 @@
     <script src="three.min.js"></script>
     <script src="DeviceOrientationControls.js?2"></script>
     <!--script src="all3d.js"></script-->
-    <script src="maxpleasure2.js"></script>
     <script src="positionfuncs.js"></script>
     <script src="pickingfuncs.js"></script>
     <script src="shaders.js"></script>
@@ -60,24 +59,32 @@
 //function getshader(k) { document.getElementById(k).textContent; };
 function getshader(k) { return shaders[k]; };
 
+var svx3d; 
 var vfac = 0.003972, redalt = 0.894682;
       
-var basepositionOrigin = [0,0,0]; 
+var basepositionOrigin = [0,0,0,0]; 
 var latR, lngR, altR, latG, lngG, altG; 
 var nyfac, nxfac, eyfac, exfac, lat0, lng0, alt0, camera3JSAlt; 
 
 
 function SetBasePositions()
 {
-    latG = basepositionOrigin[1]; 
-    lngG = basepositionOrigin[2]; 
-    altG = basepositionOrigin[3]; 
+    //latG = basepositionOrigin[1]; 
+    //lngG = basepositionOrigin[2]; 
+    //altG = basepositionOrigin[3]; 
+    latG = svx3d.latp0; 
+    lngG = svx3d.lngp0; 
+    altG = svx3d.altp0; 
+
     latR = 0; 
     lngR = 0; 
     altR = 0; 
-    lat0 = basepositionOrigin[1]; 
-    lng0 = basepositionOrigin[2]; 
-    alt0 = basepositionOrigin[3]; 
+    //lat0 = basepositionOrigin[1]; 
+    //lng0 = basepositionOrigin[2]; 
+    //alt0 = basepositionOrigin[3]; 
+    lat0 = svx3d.latp0; 
+    lng0 = svx3d.lngp0; 
+    alt0 = svx3d.altp0; 
     
     var earthrad = 6378137; 
     nyfac = 2*Math.PI*earthrad/360; 
@@ -240,7 +247,6 @@ function LoadMountains(scene)
 var centrelinematerial; 
 var centrelinebuffergeometry; 
 var minyearvalue = 9999.0, maxyearvalue = 9999.0; 
-var minaltvalue = 0.0, maxaltvalue = 0.0; 
 function LoadCentrelines(scene)
 {
     centrelinematerial = new THREE.ShaderMaterial({
@@ -257,27 +263,38 @@ function LoadCentrelines(scene)
         linewidth:3 
     });
     
-    var nlegs = svxlegindexes.length/2; 
+    var nlegs = svx3d.legindexes.length/2; 
     var centrelinepositionsbuff = new THREE.BufferAttribute(new Float32Array(nlegs*2*3), 3);
     var cosslope = new Float32Array(nlegs*2); 
     var svxcaveindex = new Float32Array(nlegs*2); 
     var svxyearvalue = new Float32Array(nlegs*2); 
-    var svxscaleInv = 1.0/svxscale;
-    for (var i = 1; i < nlegs; i++) {
-        var i0 = svxlegindexes[i*2]*3; 
-        var i1 = svxlegindexes[i*2+1]*3; 
-        var x0 = svxnodes[i0+1]*svxscaleInv, y0=svxnodes[i0+2]*svxscaleInv, z0=-svxnodes[i0]*svxscaleInv; 
-        var x1 = svxnodes[i1+1]*svxscaleInv, y1=svxnodes[i1+2]*svxscaleInv, z1=-svxnodes[i1]*svxscaleInv; 
+    var svxscaleInv = 1.0/svx3d.scale;
+
+    var altminF = 0, altmaxF = 0; 
+    for (var i = 0; i < nlegs; i++) {
+        var i0 = svx3d.legindexes[i*2]*3; 
+        var i1 = svx3d.legindexes[i*2+1]*3; 
+        var x0 = -svx3d.nodes[i0]*svxscaleInv, y0=svx3d.nodes[i0+2]*svxscaleInv, z0=svx3d.nodes[i0+1]*svxscaleInv; 
+        var x1 = -svx3d.nodes[i1]*svxscaleInv, y1=svx3d.nodes[i1+2]*svxscaleInv, z1=svx3d.nodes[i1+1]*svxscaleInv; 
         
         //var p0 = latlngtopt(svxleg[0], svxleg[1], svxleg[2]); 
         //var p1 = latlngtopt(svxleg[3], svxleg[4], svxleg[5]); 
         centrelinepositionsbuff.setXYZ(i*2, x0, y0, z0); 
         centrelinepositionsbuff.setXYZ(i*2+1, x1, y1, z1); 
-console.log(x0,y0,z0, x1,y1,z1);         
         var dx = x1 - x0, dy = y1 - y0, dz = z1 - z0; 
         var lcosslope = Math.cos(Math.atan2(dy, Math.sqrt(dx*dx + dz*dz))); 
         cosslope[i*2] = lcosslope; 
         cosslope[i*2+1] = lcosslope; 
+        
+        if ((i == 0) || (altminF > svx3d.nodes[i0+2]))
+            altminF = svx3d.nodes[i0+2]; 
+        if ((altminF > svx3d.nodes[i1+2]))
+            altminF = svx3d.nodes[i1+2]; 
+        if ((i == 0) || (altmaxF < svx3d.nodes[i1+2]))
+            altmaxF = svx3d.nodes[i0+2]; 
+        if ((altmaxF < svx3d.nodes[i1+2]))
+            altmaxF = svx3d.nodes[i1+2]; 
+            
         /*
         svxcaveindex[i*2] = svxleg[6]; 
         svxcaveindex[i*2+1] = svxleg[6]; 
@@ -288,13 +305,12 @@ console.log(x0,y0,z0, x1,y1,z1);
             if ((i == 0) || (svxleg[7] < minyearvalue))  minyearvalue = svxleg[7]; 
             if ((i == 0) || (svxleg[7] > maxyearvalue))  maxyearvalue = svxleg[7]; 
         }
-        
-        if ((i == 0) || (svxleg[2] < minaltvalue))  minaltvalue = svxleg[2]; 
-        if (            (svxleg[5] < minaltvalue))  minaltvalue = svxleg[5]; 
-        if ((i == 0) || (svxleg[2] > minaltvalue))  maxaltvalue = svxleg[2]; 
-        if (            (svxleg[5] > minaltvalue))  maxaltvalue = svxleg[5]; 
         */
     }
+    console.log("altminmax", altminF*svxscaleInv, altmaxF*svxscaleInv); 
+    vfac = 0.9/((altmaxF - altminF)*svxscaleInv); 
+    redalt = (0.5 - altmaxF*svxscaleInv*vfac) % 1; 
+    
     centrelinebuffergeometry = new THREE.BufferGeometry(); 
     centrelinebuffergeometry.addAttribute('position', centrelinepositionsbuff);
     centrelinebuffergeometry.addAttribute('cosslope', new THREE.BufferAttribute(cosslope, 1)); 
@@ -496,7 +512,8 @@ function quantshowshow(qtext)
 function setclosedistvalue(closedistvalue)
 {
     centrelinematerial.uniforms.closedist.value = closedistvalue; 
-    enttrianglematerial.uniforms.closedist.value = closedistvalue; 
+    if (enttrianglematerial) 
+        enttrianglematerial.uniforms.closedist.value = closedistvalue; 
     for (var i = 0; i < textlabelmaterials.length; i++) 
         textlabelmaterials[i].uniforms.closedist.value = closedistvalue; 
 }
@@ -699,8 +716,32 @@ function init()
     setTimeout(resize, 1);
 }
 
-init();
-animate();
+var script = document.createElement('script');
+//script.setAttribute('src', 'maxpleasure2.js');
+script.setAttribute('src', 'test.js');
+script.setAttribute('type', 'text/javascript');
+document.getElementsByTagName('head')[0].appendChild(script);
+
+function LoadSvx3d(lsvx3d)
+{
+    svx3d = lsvx3d; 
+    
+    if (svx3d.nyfac === undefined) {
+        var earthrad = 6378137; 
+        svx3d.nyfac = 2*Math.PI*earthrad/360; 
+        svx3d.nxfac = 0; 
+        svx3d.eyfac = 0; 
+        svx3d.exfac = svx3d.nyfac*Math.cos(svx3d.latp0*Math.PI/180); 
+    }
+    svx3d.scaleInv = 1.0/svx3d.scale; 
+    latG = svx3d.latp0; 
+    lngG = svx3d.lngp0; 
+    altG = svx3d.altp0; 
+    
+    init();
+    animate();
+}
+
 
 // add GPS reader to this or do fake positions
 // [must put anonymous functions in here to get this=obect rather than PositionObject.geo_success pointer directly which gets this=Window]

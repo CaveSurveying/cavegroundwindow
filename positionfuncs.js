@@ -150,7 +150,7 @@ var PositionObject =
         this.bgpserror = false; 
         latG = platitude; 
         lngG = plongitude; 
-        if (paltitude != 0.0) 
+        if (paltitude !== undefined) 
             altG = paltitude; 
         if ((latR === 0) && (altG != 0.0)) {
             var llmax = Math.max(Math.abs(latG - lat0), Math.abs(lngG - lng0)); 
@@ -175,9 +175,15 @@ var PositionObject =
     
     SetCameraPositionG: function()
     {
-        var pc = latlngtopt(latG - latR, lngG - lngR, altG - altR); 
-        camera3JSAlt = pc.y; 
-        camera.position.set(pc.x, pc.y, pc.z); 
+        var rlat = latG - latR - svx3d.latp0; 
+        var rlng = lngG - lngR - svx3d.lngp0; 
+        var ralt = altG - altR - svx3d.altp0; 
+        var x = rlat*svx3d.eyfac + rlng*svx3d.exfac; 
+        var y = rlat*svx3d.nyfac + rlng*svx3d.nxfac; 
+        var z = ralt; 
+        // var x0 = -svx3d.nodes[i0]*svxscaleInv, y0=svx3d.nodes[i0+2]*svxscaleInv, z0=svx3d.nodes[i0+1]*svxscaleInv; 
+        camera3JSAlt = z; 
+        camera.position.set(-x, z, y); 
         this.TrailUpdate(); 
     }, 
 
@@ -194,10 +200,15 @@ var PositionObject =
         var latVentReal = 54.195764; lngVentReal = -2.4627084; 
         var latVentCalc = 54.124351228332046; lngVentCalc = -2.3457319933824166;   
         var altVentDispl = 47; 
+        var paltitude; 
+        if (position.coords.altitude != 0)
+            paltitude = position.coords.altitude - altVentDispl; 
+        else
+            paltitude = undefined; 
         
         this.geo_set(position.coords.latitude - latVentReal + latVentCalc, 
                      position.coords.longitude - lngVentReal + lngVentCalc, 
-                     position.coords.altitude - altVentDispl, 
+                     paltitude, 
                      position.coords.accuracy, position.coords.altitudeAccuracy); 
         document.getElementById('gpsrecV').textContent = " "+(position.coords.speed|0).toFixed(1)+"m/s "+(position.coords.heading|0).toFixed(1)+"D"; 
         document.getElementById('testout2').textContent = "#"+(this.geosetcount++)+"#"+position.coords.altitude; 

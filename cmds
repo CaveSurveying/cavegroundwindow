@@ -1,6 +1,11 @@
 http://tinyurl.com/jzjxvmu  is http://goatchurchprime.github.io/cardboardlike/groundwindow.html
 
+dump3d maxpleasure2.3d | ../survexprocessing/parse3ddmp.py -s --js=maxpleasure2.js 
+
+// 
+
 // * unhosted.org
+// * make the test.js case work
 
 // * simplify is js code (baseposition as smaller, and  
 // * move more of the javascript into js files and objects
