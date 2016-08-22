@@ -27,8 +27,7 @@ X  9 5       0      45
 X  E 40      45     80
 *entrance E
 
-*fix cordonhill reference 30500 969530 513
-*equate cordonhill landmark_cordon_hill   ; name landmark signifies it to be a mountain top
+*fix cordonhill reference 30500 96953 513
 *equate cordonhill landmark_cordon_hill   ; name landmark signifies it to be a mountain top
 
 *fix north5 reference 38000 98000 180

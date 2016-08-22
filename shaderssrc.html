@@ -97,12 +97,23 @@ uniform float aspect;
 attribute float pcorner; 
 void main()
 {
-    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+// this is going to need more debugging
+    vec4 position1 = vec4(position, 1.0); 
+    vec4 mvPosition = modelViewMatrix * position1;
     gl_Position = projectionMatrix * mvPosition; 
-    float strianglesize = trianglesize*gl_Position.z; 
     if (pcorner != 0.0) {
-        // this is now attempting to draw the triangle fixed even with spin rotation of the screen
-        gl_Position += projectionMatrix*viewMatrix[1]*(-strianglesize) + projectionMatrix*viewMatrix[0]*((pcorner == 1.0 ? 1.0 : -1.0) * 0.57735*strianglesize); 
+        position1.y += 1.0; 
+        vec4 glposition1 = projectionMatrix * (modelViewMatrix * position1); 
+        float xv = glposition1.x - gl_Position.x; 
+        float yv = glposition1.y - gl_Position.y; 
+        float strianglesize = trianglesize*gl_Position.z*5.0; 
+        float d = sqrt(xv*xv + yv*yv); // must be a function to do this
+        float dfac = (d > 0.000001 ? 1.0/d : 1.0)*strianglesize; 
+        float dsfac = dfac*0.57735*(pcorner == 1.0 ? 1.0 : -1.0); 
+        gl_Position.x += -xv*dfac + yv*dsfac; 
+        gl_Position.y += -yv*dfac - xv*dsfac; 
+        
+        //gl_Position += projectionMatrix*viewMatrix[0]*((pcorner == 1.0 ? 1.0 : -1.0) * 0.57735*strianglesize); 
         //gl_Position.y += strianglesize*aspect; 
         //gl_Position.x += (pcorner == 1.0 ? 1.0 : -1.0) * 0.57735*strianglesize; 
     }
