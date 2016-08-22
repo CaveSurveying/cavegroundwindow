@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Groundwindow</title>
+    <title>Groundwindow2</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
     <style>
       body { margin: 0px; overflow: hidden; }
       #viz { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
       #quantbutton { position: absolute; right:0; top: 0; border: thin red solid; background:#ddf; display: block }
-      #quantshow { position: absolute; right:0; top: 0; width: 75%; bo0rder: thin red solid; background:#ddf; display: block }
+      #quantshow { position: absolute; right:0; top: 0; width: 75%; border: thin red solid; background:#fdd; display: block }
       #quantshowtext { font-size: 200%; position: relative; left: 0; top: 0; display: none }
       #postext { position: relative; left: 0; top: 0; display: block }
       #postext input, #quantbutton input { font-size: 150%}
@@ -18,7 +18,7 @@
     <link rel="manifest" href="manifest.json">
     <script src="three.min.js"></script>
     <script src="DeviceOrientationControls.js?2"></script>
-    <!--script src="all3d.js"></script-->
+    <script src="plottedgeometry.js"></script>
     <script src="positionfuncs.js"></script>
     <script src="pickingfuncs.js"></script>
     <script src="shaders.js"></script>
@@ -59,7 +59,7 @@
 //function getshader(k) { document.getElementById(k).textContent; };
 function getshader(k) { return shaders[k]; };
 
-var svx3d; 
+var svx3d;   // the structure pulled in that is generated from the 
 var vfac = 0.003972, redalt = 0.894682;
       
 var basepositionOrigin = [0,0,0,0]; 
@@ -119,7 +119,7 @@ function HighTopView()
     GdeviceOrientation.gamma = 0.1;   // required for alpha to change position
     GdeviceOrientation.beta = 0; 
     GdeviceOrientation.alpha = -90; 
-    PositionObject.geo_set(latG, lngG, altG + 100, 0, 0);  
+    PositionObject.geo_set(lngG, latG, altG + 100, 0, 0);  
 }
 
 var camera, scene, renderer, controls, threejselement, vizcontainer;
@@ -165,84 +165,7 @@ function latlngtopt(lat, lng, alt)
 }
 
 
-var textlabelmaterials = [ ]; 
-function MakeLabel(card, text, fillstyle, p, scale)
-{
-    var canvas1 = document.createElement('canvas');
-    canvas1.width = 256;  canvas1.height = 32; 
-    var context1 = canvas1.getContext('2d');
-    context1.font = "28px Helvetica";
-    context1.fillStyle = fillstyle;
-    context1.fillText(text, 0, 20); 
 
-// this one we can highlight it individually with a selection boolean
-    var texture1 = new THREE.Texture(canvas1);  
-    texture1.needsUpdate = true; 
-    var textlabelmaterial = new THREE.ShaderMaterial({
-        uniforms: { pixelsize: {type: 'f', value: 1.2}, 
-                    aspect: { type: 'f', value: 1.0 },
-                    textureaspect: { type: 'f', value: canvas1.width/canvas1.height }, 
-                    texture: { value: texture1 },
-                    closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
-                    closedist: { type: 'f', value: 5.0 },  
-                    redalt: { type: 'f', value: redalt },
-                    vfac: { type: 'f', value: vfac } 
-                  }, 
-        vertexShader: getshader('vertex_shader_textlabel'),
-        fragmentShader: getshader('fragment_shader_textlabel'), 
-        depthWrite:true, depthTest:true, 
-        side: THREE.DoubleSide
-    }); 
-    textlabelmaterials.push(textlabelmaterial); 
-
-    var textlabelpositionsbuff = new THREE.BufferAttribute(new Float32Array(4*3), 3);
-    var textlabeluvsbuff = new THREE.BufferAttribute(new Float32Array(4*2), 2);
-    for (var i = 0; i < 4; i++) {
-        textlabelpositionsbuff.setXYZ(i, p.x, p.y, p.z); 
-        textlabeluvsbuff.setXY(i, ((i == 0) || (i == 2) ? 0.0 : 1.0), (i <= 1 ? 0.0 : 1.0)); 
-    }
-    var indices = new Uint16Array(6);
-    indices[0] = 0; indices[1] = 1; indices[2] = 2; 
-    indices[3] = 1; indices[4] = 3; indices[5] = 2; 
-    var buffergeometry = new THREE.BufferGeometry(); 
-    buffergeometry.setIndex(new THREE.BufferAttribute(indices, 1));
-    buffergeometry.addAttribute('position', textlabelpositionsbuff);
-    buffergeometry.addAttribute('uv', textlabeluvsbuff);
-    mesh1 = new THREE.Mesh(buffergeometry, textlabelmaterial); 
-    card.add(mesh1);
-}
-
-var peaktrianglematerial; 
-function LoadMountains(scene)
-{
-    var peakpositionbuff = new THREE.BufferAttribute(new Float32Array(peaks.length*9), 3); 
-    var peakcorner = new Float32Array(peaks.length*3); 
-    
-    var card = new THREE.Object3D();
-    for (var i = 0; i < peaks.length; i++) {
-        var p = latlngtopt(peaks[i][1], peaks[i][2], peaks[i][3]); 
-        peakpositionbuff.setXYZ(i*3, p.x, p.y, p.z);  peakpositionbuff.setXYZ(i*3+1, p.x, p.y, p.z);  peakpositionbuff.setXYZ(i*3+2, p.x, p.y, p.z); 
-        peakcorner[i*3] = 0.0;  peakcorner[i*3+1] = 1.0;  peakcorner[i*3+2] = 2.0; 
-
-        MakeLabel(card, peaks[i][0], "rgba(255,255,255,0.95)", p, 10); 
-    }
-    scene.add(card);
-    
-    buffergeometry = new THREE.BufferGeometry(); 
-    buffergeometry.addAttribute('position', peakpositionbuff); 
-    buffergeometry.addAttribute('pcorner', new THREE.BufferAttribute(peakcorner, 1)); 
-    peaktrianglematerial = new THREE.ShaderMaterial({
-        uniforms: { trianglesize: {type: 'f', value: 15.0}, 
-                    aspect: { type: 'f', value: 1.0 }
-                  }, 
-        vertexShader: getshader('vertexShader_peaktriangle'),
-        depthWrite:true, depthTest:true, 
-        side: THREE.DoubleSide
-    }); 
-    
-    var peaktriangles = new THREE.Mesh(buffergeometry, peaktrianglematerial);  
-    scene.add(peaktriangles); 
-}
 
 var centrelinematerial; 
 var centrelinebuffergeometry; 
@@ -274,8 +197,8 @@ function LoadCentrelines(scene)
     for (var i = 0; i < nlegs; i++) {
         var i0 = svx3d.legindexes[i*2]*3; 
         var i1 = svx3d.legindexes[i*2+1]*3; 
-        var x0 = -svx3d.nodes[i0]*svxscaleInv, y0=svx3d.nodes[i0+2]*svxscaleInv, z0=svx3d.nodes[i0+1]*svxscaleInv; 
-        var x1 = -svx3d.nodes[i1]*svxscaleInv, y1=svx3d.nodes[i1+2]*svxscaleInv, z1=svx3d.nodes[i1+1]*svxscaleInv; 
+        var x0 = -svx3d.legnodes[i0]*svxscaleInv, y0=svx3d.legnodes[i0+2]*svxscaleInv, z0=svx3d.legnodes[i0+1]*svxscaleInv; 
+        var x1 = -svx3d.legnodes[i1]*svxscaleInv, y1=svx3d.legnodes[i1+2]*svxscaleInv, z1=svx3d.legnodes[i1+1]*svxscaleInv; 
         
         //var p0 = latlngtopt(svxleg[0], svxleg[1], svxleg[2]); 
         //var p1 = latlngtopt(svxleg[3], svxleg[4], svxleg[5]); 
@@ -286,14 +209,14 @@ function LoadCentrelines(scene)
         cosslope[i*2] = lcosslope; 
         cosslope[i*2+1] = lcosslope; 
         
-        if ((i == 0) || (altminF > svx3d.nodes[i0+2]))
-            altminF = svx3d.nodes[i0+2]; 
-        if ((altminF > svx3d.nodes[i1+2]))
-            altminF = svx3d.nodes[i1+2]; 
-        if ((i == 0) || (altmaxF < svx3d.nodes[i1+2]))
-            altmaxF = svx3d.nodes[i0+2]; 
-        if ((altmaxF < svx3d.nodes[i1+2]))
-            altmaxF = svx3d.nodes[i1+2]; 
+        if ((i == 0) || (altminF > svx3d.legnodes[i0+2]))
+            altminF = svx3d.legnodes[i0+2]; 
+        if ((altminF > svx3d.legnodes[i1+2]))
+            altminF = svx3d.legnodes[i1+2]; 
+        if ((i == 0) || (altmaxF < svx3d.legnodes[i1+2]))
+            altmaxF = svx3d.legnodes[i0+2]; 
+        if ((altmaxF < svx3d.legnodes[i1+2]))
+            altmaxF = svx3d.legnodes[i1+2]; 
             
         /*
         svxcaveindex[i*2] = svxleg[6]; 
@@ -359,7 +282,7 @@ function LoadEntrances(scene)
         svxcaveindex[i*3] = svxents[i][4];  svxcaveindex[i*3+1] = svxents[i][4];  svxcaveindex[i*3+2] = svxents[i][4]; 
         
         if (svxents[i][0].match(/p\d+[a-z]?$/) !== null) {
-            MakeLabel(entlabelscard, svxents[i][0], "rgba(0,200,200,0.95)", p, 0.5);  // rgba(0,200,200,0.95)
+            PlotGeometryObject.MakeLabel(entlabelscard, svxents[i][0], "rgba(0,200,200,0.95)", p, 0.5);  // rgba(0,200,200,0.95)
         }
     }
     scene.add(entlabelscard);
@@ -409,17 +332,10 @@ function resize()
     var width = vizcontainer.offsetWidth;
     var height = vizcontainer.offsetHeight;
     camera.aspect = width / height;
-    if (peaktrianglematerial) {
-        peaktrianglematerial.uniforms.aspect.value = camera.aspect; 
-        peaktrianglematerial.uniforms.trianglesize.value = 10/height; 
-    }
+    PlotGeometryObject.resizeP(width, height); 
     if (enttrianglematerial) {
         enttrianglematerial.uniforms.aspect.value = camera.aspect; 
         enttrianglematerial.uniforms.trianglesize.value = 5/width; 
-    }
-    for (var i = 0; i < textlabelmaterials.length; i++) {
-        textlabelmaterials[i].uniforms.aspect.value = camera.aspect; 
-        textlabelmaterials[i].uniforms.pixelsize.value = 60/width; 
     }
     camera.updateProjectionMatrix();
     renderer.setSize(width, height);
@@ -514,8 +430,7 @@ function setclosedistvalue(closedistvalue)
     centrelinematerial.uniforms.closedist.value = closedistvalue; 
     if (enttrianglematerial) 
         enttrianglematerial.uniforms.closedist.value = closedistvalue; 
-    for (var i = 0; i < textlabelmaterials.length; i++) 
-        textlabelmaterials[i].uniforms.closedist.value = closedistvalue; 
+    PlotGeometryObject.setclosedistvalueP(closedistvalue); 
 }
 
 
@@ -644,6 +559,7 @@ function init()
     postextelement = document.getElementById('postext'); 
     
     scene = new THREE.Scene();
+    PlotGeometryObject.scene = scene; 
     var fieldofview = 30; // degrees (smaller is more tunnel like)
     var aspect = 1;       // reset in resize()
     var neardistance = 5; 
@@ -671,8 +587,9 @@ function init()
             if (mv.rz)  GdeviceOrientation.beta += mv.rz*5; 
             if (mv.ry)  GdeviceOrientation.alpha += mv.ry*5; 
         } else if (mv.x || mv.y || mv.z) {
-            PositionObject.geo_set(latG + (mv.z|0)*keylatlngstep, lngG + (mv.x|0)*keylatlngstep, altG + (mv.y|0)*keyaltstep, 0, 0);  
-        }
+            PositionObject.geo_set(lngG + (mv.x|0)*keylatlngstep, latG + (mv.z|0)*keylatlngstep, altG + (mv.y|0)*keyaltstep, 0, 0);  
+            document.getElementById('gpsrec').textContent = "FLat:"+latG.toFixed(7)+" Lng:"+lngG.toFixed(7)+" Alt:"+altG.toFixed(1); 
+       }
     });
 
     
@@ -680,11 +597,13 @@ function init()
     light.position.set(0, 2500, 0);
     scene.add(light);
 
-    //LoadMountains(scene); 
+    PlotGeometryObject.LoadMountains(svx3d.landmarks, 1.0/svx3d.scale); 
     LoadCentrelines(scene); 
     //LoadEntrances(scene); 
-    //PositionObject.LoadTrail(scene); 
-    PositionObject.LoadTrailRods(scene); 
+    
+    PositionObject.LoadTrail(scene); 
+    //PositionObject.LoadTrailRods(scene); 
+    
     PositionObject.LoadFootpos(scene); 
     //PositionObject.LoadPickPos(scene); 
     //LoadVideoBackground(); 

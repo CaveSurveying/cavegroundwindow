@@ -13,6 +13,9 @@ var PositionObject =
     footposmesh: null, 
     pickposmesh: null, 
 
+    footvelocitybuff: null, 
+    footvelocitylines: null, 
+
     fakegpsgenerator: function()
     {
         var ioffs = 100, ifac = 1.0/600; 
@@ -38,7 +41,7 @@ var PositionObject =
             this.trailrodsbuff.vertices.push(new THREE.Vector3(camera.position.x, 0, camera.position.z)); 
             this.trailrodsbuff.vertices.push(new THREE.Vector3(camera.position.x, camera.position.y, camera.position.z)); 
         }
-        var trailrodsmaterial = new THREE.LineDashedMaterial({ color: 0x555555, linewidth: 1, gapSize:10 }); 
+        var trailrodsmaterial = new THREE.LineDashedMaterial({ color: 0x555555, linewidth: 2, gapSize:20 }); 
         this.trailrods = new THREE.LineSegments(this.trailrodsbuff, trailrodsmaterial); 
         scene.add(this.trailrods); 
     },
@@ -89,12 +92,21 @@ var PositionObject =
             }
         }
         
-        if (this.footposmesh) {
+        if (this.footposmesh) 
             this.footposmesh.position.set(camera.position.x, camera.position.y - this.footminusalt, camera.position.z); 
-        }
+        if (this.footvelocitylines)
+            this.footvelocitylines.position.set(camera.position.x, camera.position.y - this.footminusalt, camera.position.z); 
     }, 
 
-
+    UpdateFootVelocity: function(speed, heading)
+    {
+        var ang = (heading+90.0)*Math.PI/180; 
+        this.footvelocitybuff.vertices[1].set(Math.cos(ang)*speed, 0, Math.sin(ang)*speed); 
+        this.footvelocitybuff.verticesNeedUpdate = true; 
+        this.footvelocitybuff.computeBoundingSphere(); 
+        this.footvelocitybuff.computeBoundingBox(); 
+    }, 
+    
     LoadFootpos: function(scene) 
     {
         var alt = 0, tfac = 0.5, pixsize = 0.06; 
@@ -119,6 +131,14 @@ var PositionObject =
         buffergeometry.addAttribute('position', vertbuff);
         this.footposmesh = new THREE.Mesh(buffergeometry, new THREE.MeshBasicMaterial({ color: 0x22FF11 }));  
         scene.add(this.footposmesh); 
+        
+        // velocity vector (could be an arrow, but keep the head on the origin and extend and shift the tail point!)
+        this.footvelocitybuff = new THREE.Geometry(); 
+        this.footvelocitybuff.vertices.push(new THREE.Vector3(0, 0, 0)); 
+        this.footvelocitybuff.vertices.push(new THREE.Vector3(0, 0, 1)); 
+        var footvelocitymaterial = new THREE.LineBasicMaterial({ color: 0x22FF11, linewidth: 3 }); 
+        this.footvelocitylines = new THREE.LineSegments(this.footvelocitybuff, footvelocitymaterial); 
+        scene.add(this.footvelocitylines); 
     },
 
     LoadPickPos: function(scene)
@@ -145,7 +165,7 @@ var PositionObject =
 
 
 
-    geo_set: function(platitude, plongitude, paltitude, paccuracy, paltitudeaccuracy) 
+    geo_set: function(plongitude, platitude, paltitude, paccuracy, paltitudeaccuracy) 
     { 
         this.bgpserror = false; 
         latG = platitude; 
@@ -164,10 +184,6 @@ var PositionObject =
             }
         }
         
-        document.getElementById('gpsrec').textContent = "Lat:"+latG.toFixed(7)+" Lng:"+lngG.toFixed(7)+
-                                                        " (~"+paccuracy.toFixed(0)+"m)"+
-                                                        " Alt:"+paltitude.toFixed(1)+
-                                                        " (~"+paltitudeaccuracy.toFixed(0)+"m)"; 
         //document.getElementById('speed').textContent = position.coords.speed.toFixed(2); 
         //document.getElementById('heading').textContent = position.coords.heading.toFixed(0); 
         this.SetCameraPositionG();
@@ -181,7 +197,7 @@ var PositionObject =
         var x = rlat*svx3d.eyfac + rlng*svx3d.exfac; 
         var y = rlat*svx3d.nyfac + rlng*svx3d.nxfac; 
         var z = ralt; 
-        // var x0 = -svx3d.nodes[i0]*svxscaleInv, y0=svx3d.nodes[i0+2]*svxscaleInv, z0=svx3d.nodes[i0+1]*svxscaleInv; 
+        // var x0 = -svx3d.legnodes[i0]*svxscaleInv, y0=svx3d.legnodes[i0+2]*svxscaleInv, z0=svx3d.legnodes[i0+1]*svxscaleInv; 
         camera3JSAlt = z; 
         camera.position.set(-x, z, y); 
         this.TrailUpdate(); 
@@ -191,27 +207,35 @@ var PositionObject =
     geo_success: function(position) 
     { 
         this.bgpserror = false; 
+        document.getElementById('gpsrec').textContent = "Lat:"+position.coords.latitude.toFixed(7)+" Lng:"+position.coords.longitude.toFixed(7)+
+                                                        " (~"+position.coords.accuracy.toFixed(0)+"m)"+
+                                                        " Alt:"+position.coords.altitude.toFixed(1)+
+                                                        " (~"+position.coords.altitudeAccuracy.toFixed(0)+"m)"; 
+        document.getElementById('gpsrecV').textContent = " "+(position.coords.speed|0).toFixed(1)+"m/s "+(position.coords.heading|0).toFixed(1)+"D"; 
+        document.getElementById('testout2').textContent = "#"+(this.geosetcount); 
 
         // use valley entrance settings calculated as follows from the SVX fix positions
         // cs = "CS +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=100000 +y_0=-500000 +ellps=airy +datum=OSGB36 +units=m +no_defs"
         // proj = pyproj.Proj(cs)
         // lng, lat = proj(77407.244, 69907.233, inverse=True)
 
-        var latVentReal = 54.195764; lngVentReal = -2.4627084; 
-        var latVentCalc = 54.124351228332046; lngVentCalc = -2.3457319933824166;   
-        var altVentDispl = 47; 
-        var paltitude; 
-        if (position.coords.altitude != 0)
-            paltitude = position.coords.altitude - altVentDispl; 
-        else
-            paltitude = undefined; 
+        // There is a consistent displacement in the Firefox GPS position (F0) to the one given by the GPS status in same phone (F0c)
+        // no idea how this gets in, but might be better when using another browser
+        var posF0 = [52.4646548, -2.7956959, 248]; 
+        var posF0c = [52.53606, -2.91357, 200]; 
         
-        this.geo_set(position.coords.latitude - latVentReal + latVentCalc, 
-                     position.coords.longitude - lngVentReal + lngVentCalc, 
-                     paltitude, 
+        // correction at building where the latlng errors disappeared!
+        posF0 = [52.5335, -2.91404, 263]; 
+        posF0c = [52.53335, -2.91404, 216]; 
+
+        if (this.footvelocitylines) 
+            this.UpdateFootVelocity(position.coords.speed, position.coords.heading  ); 
+
+        var posF0D = [posF0c[0] - posF0[0], posF0c[1] - posF0[1], posF0c[2] - posF0[2]]; 
+        this.geo_set(position.coords.longitude + posF0D[0], position.coords.latitude + posF0D[1], 
+                     (position.coords.altitude != 0 ? position.coords.altitude + posF0D[2] : undefined), 
                      position.coords.accuracy, position.coords.altitudeAccuracy); 
-        document.getElementById('gpsrecV').textContent = " "+(position.coords.speed|0).toFixed(1)+"m/s "+(position.coords.heading|0).toFixed(1)+"D"; 
-        document.getElementById('testout2').textContent = "#"+(this.geosetcount++)+"#"+position.coords.altitude; 
+        this.geosetcount++; 
     },
     
     geoerrcount: 0,

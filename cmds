@@ -1,13 +1,24 @@
 http://tinyurl.com/jzjxvmu  is http://goatchurchprime.github.io/cardboardlike/groundwindow.html
 
 dump3d maxpleasure2.3d | ../survexprocessing/parse3ddmp.py -s --js=maxpleasure2.js 
+python ../survexprocessing/parse3ddmp.py --js=test.js --svx=test.svx
 
-// 
+adb push groundwindow.html /storage/emulated/legacy/groundwindow/
+
+// * put entrance and mountain cases into the data and the js file 
+// * and actually enter some in for the mynd area
+// * convert *fix type mountains (like the entrances)
+// * convert entrances
+// * add an entrance case
+// * parallel lists for the index points in each
+// * ability to select different js files
+// * output tubes and try out
+// * relative to main cave loading thing
 
 // * unhosted.org
 // * make the test.js case work
 
-// * simplify is js code (baseposition as smaller, and  
+// * simplify is js code (baseposition as smaller, and  )
 // * move more of the javascript into js files and objects
 // * do Philip's conversion stuff
 // * conversion code to note multiple node names for a node
