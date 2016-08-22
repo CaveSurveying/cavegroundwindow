@@ -5,11 +5,14 @@ python ../survexprocessing/parse3ddmp.py --js=test.js --svx=test.svx
 
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
+// * debug the mountain triangles
+// * shift the makecentrelines and entrances into the plottedgeometry system
 // * put entrance and mountain cases into the data and the js file 
 // * and actually enter some in for the mynd area
-// * convert *fix type mountains (like the entrances)
+
 // * convert entrances
 // * add an entrance case
+// * convert *fix type mountains (like the entrances)
 // * parallel lists for the index points in each
 // * ability to select different js files
 // * output tubes and try out

@@ -91,7 +91,7 @@ var PlotGeometryObject =
         var aspect = width / height;
         if (this.peaktrianglematerial) {
             this.peaktrianglematerial.uniforms.aspect.value = aspect; 
-            this.peaktrianglematerial.uniforms.trianglesize.value = 10/height; 
+            this.peaktrianglematerial.uniforms.trianglesize.value = 50/width; 
         }
         for (var i = 0; i < this.textlabelmaterials.length; i++) {
             this.textlabelmaterials[i].uniforms.aspect.value = aspect; 
