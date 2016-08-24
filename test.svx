@@ -10,6 +10,7 @@
 *cs OSGB:SO
 *fix X 38000 93000 180 ; easting(m) northing(m) alt(m)
 
+*data normal from to tape compass clino
 ; square
 X  1 100 0   0
 1  2 100 90  0
@@ -26,6 +27,11 @@ X  8 5       225    45
 X  9 5       0      45
 X  E 40      45     80
 *entrance E
+
+*data passage station left right up down
+1 5 5 2 2
+2 6 6 8 2 
+3 5 5 2 2 
 
 *fix cordonhill reference 30500 96953 513
 *equate cordonhill landmark_cordon_hill   ; name landmark signifies it to be a mountain top

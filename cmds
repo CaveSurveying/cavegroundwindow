@@ -5,10 +5,6 @@ python ../survexprocessing/parse3ddmp.py --js=test.js --svx=test.svx
 
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
-// * debug the mountain triangles
-// * shift the makecentrelines and entrances into the plottedgeometry system
-// * put entrance and mountain cases into the data and the js file 
-// * and actually enter some in for the mynd area
 
 // * convert entrances
 // * add an entrance case
@@ -78,6 +74,7 @@ getting readings in field of 140 from gpsstatus 187 on app   -- always 47m too h
 
 
 // done
+// * shift the makecentrelines and entrances into the plottedgeometry.js file
 // * dot tracking changed to vertical lines from sea level
 // * the north position thing  set gamma=0.1
 // * move the shaders into own compiled include file

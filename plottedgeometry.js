@@ -7,8 +7,21 @@ var PlotGeometryObject =
     peaktrianglematerial: null, 
     peaktriangles: null,
 
-    textlabelmaterials: [ ], 
+    centrelinematerial: null, 
+    centrelinebuffergeometry: null,  
+    minyearvalue: 9999.0, 
+    maxyearvalue: 9999.0, 
+    altminF: 0, 
+    altmaxF: 0, 
+
+    enttrianglematerial: null,
+    entgeometry: null, 
+    entlabelscard: null, 
+
+    passagetubes: null, 
     
+    textlabelmaterials: [ ], 
+
     MakeLabel: function(card, text, fillstyle, p, scale)
     {
         var canvas1 = document.createElement('canvas');
@@ -86,6 +99,137 @@ var PlotGeometryObject =
         this.scene.add(this.peaktriangles); 
     }, 
     
+    LoadCentrelines: function(legnodes, legindexes, svxscaleInv)
+    {
+        this.centrelinematerial = new THREE.ShaderMaterial({
+            uniforms: { closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
+                        closedist: { type: 'f', value: 5.0 }, 
+                        yeartime: { type: 'f', value: 9999.0 },
+                        selectedvsvxcaveindex: { type: 'f', value: -1.0 }, 
+                        redalt: { type: 'f', value: redalt },
+                        vfac: { type: 'f', value: vfac } 
+                      }, 
+            vertexShader: getshader('vertexShader_centreline'),
+            fragmentShader: getshader('fragment_shader_centreline'), 
+            depthWrite:true, depthTest:true,  // not sure these work
+            linewidth:3 
+        });
+        
+        var nlegs = svx3d.legindexes.length/2; 
+        var centrelinepositionsbuff = new THREE.BufferAttribute(new Float32Array(nlegs*2*3), 3);
+        var cosslope = new Float32Array(nlegs*2); 
+        var svxcaveindex = new Float32Array(nlegs*2); 
+        var svxyearvalue = new Float32Array(nlegs*2); 
+
+        for (var i = 0; i < nlegs; i++) {
+            var i0 = svx3d.legindexes[i*2]*3; 
+            var i1 = svx3d.legindexes[i*2+1]*3; 
+            var x0 = -svx3d.legnodes[i0]*svxscaleInv, y0=svx3d.legnodes[i0+2]*svxscaleInv, z0=svx3d.legnodes[i0+1]*svxscaleInv; 
+            var x1 = -svx3d.legnodes[i1]*svxscaleInv, y1=svx3d.legnodes[i1+2]*svxscaleInv, z1=svx3d.legnodes[i1+1]*svxscaleInv; 
+            
+            //var p0 = latlngtopt(svxleg[0], svxleg[1], svxleg[2]); 
+            //var p1 = latlngtopt(svxleg[3], svxleg[4], svxleg[5]); 
+            centrelinepositionsbuff.setXYZ(i*2, x0, y0, z0); 
+            centrelinepositionsbuff.setXYZ(i*2+1, x1, y1, z1); 
+            var dx = x1 - x0, dy = y1 - y0, dz = z1 - z0; 
+            var lcosslope = Math.cos(Math.atan2(dy, Math.sqrt(dx*dx + dz*dz))); 
+            cosslope[i*2] = lcosslope; 
+            cosslope[i*2+1] = lcosslope; 
+            
+            if ((i == 0) || (altminF > svx3d.legnodes[i0+2]))
+                altminF = svx3d.legnodes[i0+2]; 
+            if ((altminF > svx3d.legnodes[i1+2]))
+                altminF = svx3d.legnodes[i1+2]; 
+            if ((i == 0) || (altmaxF < svx3d.legnodes[i1+2]))
+                altmaxF = svx3d.legnodes[i0+2]; 
+            if ((altmaxF < svx3d.legnodes[i1+2]))
+                altmaxF = svx3d.legnodes[i1+2]; 
+                
+            /*
+            svxcaveindex[i*2] = svxleg[6]; 
+            svxcaveindex[i*2+1] = svxleg[6]; 
+            svxyearvalue[i*2] = svxleg[7]; 
+            svxyearvalue[i*2+1] = svxleg[7]; 
+            
+            if (svxleg[7] != 1900) {
+                if ((i == 0) || (svxleg[7] < minyearvalue))  minyearvalue = svxleg[7]; 
+                if ((i == 0) || (svxleg[7] > maxyearvalue))  maxyearvalue = svxleg[7]; 
+            }
+            */
+        }
+        console.log("altminmax", altminF*svxscaleInv, altmaxF*svxscaleInv); 
+        vfac = 0.9/((altmaxF - altminF)*svxscaleInv); 
+        redalt = (0.5 - altmaxF*svxscaleInv*vfac) % 1; 
+        
+        this.centrelinebuffergeometry = new THREE.BufferGeometry(); 
+        this.centrelinebuffergeometry.addAttribute('position', centrelinepositionsbuff);
+        this.centrelinebuffergeometry.addAttribute('cosslope', new THREE.BufferAttribute(cosslope, 1)); 
+        this.centrelinebuffergeometry.addAttribute('svxcaveindex', new THREE.BufferAttribute(svxcaveindex, 1)); 
+        this.centrelinebuffergeometry.addAttribute('svxyearvalue', new THREE.BufferAttribute(svxyearvalue, 1)); 
+
+        var contour = new THREE.LineSegments(this.centrelinebuffergeometry, this.centrelinematerial);  
+        this.scene.add(contour); 
+    },
+    
+    LoadEntrances: function(svxents, svxscaleInv)
+    {
+        var entpositionbuff = new THREE.BufferAttribute(new Float32Array(svxents.length*9), 3); 
+        var entcorner = new Float32Array(svxents.length*3); 
+        var svxcaveindex = new Float32Array(svxents.length*3); 
+        
+        this.entgeometry = new THREE.BufferGeometry(); 
+        this.entgeometry.addAttribute('position', entpositionbuff); 
+        this.entgeometry.addAttribute('pcorner', new THREE.BufferAttribute(entcorner, 1)); 
+        this.entgeometry.addAttribute('svxcaveindex', new THREE.BufferAttribute(svxcaveindex, 1)); 
+        this.enttrianglematerial = new THREE.ShaderMaterial({
+            uniforms: { trianglesize: {type: 'f', value: 10.0}, 
+                        aspect: { type: 'f', value: 1.0 }, 
+                        closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
+                        closedist: { type: 'f', value: 5.0 }, 
+                        selectedvsvxcaveindex: { type: 'f', value: -1.0 }, 
+                        redalt: { type: 'f', value: redalt },
+                        vfac: { type: 'f', value: vfac } 
+                      }, 
+            vertexShader: getshader('vertex_shader_enttriangle'),
+            fragmentShader: getshader('fragment_shader_centreline'), 
+            depthWrite:true, depthTest:true, 
+            side: THREE.DoubleSide
+        }); 
+        var enttriangles = new THREE.Mesh(this.entgeometry, this.enttrianglematerial);  
+        scene.add(enttriangles); 
+
+        this.entlabelscard = new THREE.Object3D();
+        for (var i = 0; i < svxents.length; i++) {
+            var p = latlngtopt(svxents[i][1], svxents[i][2], svxents[i][3]); 
+            entpositionbuff.setXYZ(i*3, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+1, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+2, p.x, p.y, p.z); 
+            entcorner[i*3] = 0.0;  entcorner[i*3+1] = 1.0;  entcorner[i*3+2] = 2.0; 
+            svxcaveindex[i*3] = svxents[i][4];  svxcaveindex[i*3+1] = svxents[i][4];  svxcaveindex[i*3+2] = svxents[i][4]; 
+            
+            if (svxents[i][0].match(/p\d+[a-z]?$/) !== null) {
+                this.MakeLabel(this.entlabelscard, svxents[i][0], "rgba(0,200,200,0.95)", p, 0.5);  // rgba(0,200,200,0.95)
+            }
+        }
+        this.scene.add(this.entlabelscard);
+    },
+
+    LoadPassageTubes: function(passagenodes, passagetriangles, svxscaleInv) 
+    {
+        var nnodes = passagenodes.length/3; 
+        ssgvertbuff = new THREE.Float32Attribute(new Float32Array(nnodes*3), 3); 
+        for (var i = 0; i < nnodes; i++) {
+            var x0 = -passagenodes[i*3]*svxscaleInv, y0=passagenodes[i*3+2]*svxscaleInv, z0=passagenodes[i*3+1]*svxscaleInv; 
+            ssgvertbuff.setXYZ(i, x0, y0, z0); 
+        }
+        var indices = new Uint16Array(passagetriangles.length); 
+        for (var i = 0; i < passagetriangles.length; i++)
+            indices[i] = passagetriangles[i]; 
+        var buffergeometry = new THREE.BufferGeometry(); 
+        buffergeometry.setIndex(new THREE.BufferAttribute(indices, 1)); 
+        buffergeometry.addAttribute('position', ssgvertbuff);
+        this.passagetubes = new THREE.Mesh(buffergeometry, new THREE.MeshBasicMaterial({ color: 0xDD44EE }));  
+        this.scene.add(this.passagetubes); 
+    }, 
+    
     resizeP: function(width, height)
     {
         var aspect = width / height;
@@ -97,12 +241,18 @@ var PlotGeometryObject =
             this.textlabelmaterials[i].uniforms.aspect.value = aspect; 
             this.textlabelmaterials[i].uniforms.pixelsize.value = 60/width; 
         }
+        if (this.enttrianglematerial) {
+            this.enttrianglematerial.uniforms.aspect.value = aspect; 
+            this.enttrianglematerial.uniforms.trianglesize.value = 5/width; 
+        }
     },
     setclosedistvalueP: function(closedistvalue)
     {
+        this.centrelinematerial.uniforms.closedist.value = closedistvalue; 
         for (var i = 0; i < this.textlabelmaterials.length; i++) 
             this.textlabelmaterials[i].uniforms.closedist.value = closedistvalue; 
+        if (this.enttrianglematerial) 
+            this.enttrianglematerial.uniforms.closedist.value = closedistvalue; 
     }
-    
 };
 

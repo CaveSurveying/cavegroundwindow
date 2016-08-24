@@ -46,8 +46,8 @@ var PickingObject = {
                 }
             } else if (this.isvxents < svxents.length + svxlegs.length) {
                 var i = this.isvxents - svxents.length; 
-                this.vStart.fromArray(centrelinebuffergeometry.attributes.position.array, i*6);
-                this.vEnd.fromArray(centrelinebuffergeometry.attributes.position.array, i*6+3);
+                this.vStart.fromArray(PlotGeometryObject.centrelinebuffergeometry.attributes.position.array, i*6);
+                this.vEnd.fromArray(PlotGeometryObject.centrelinebuffergeometry.attributes.position.array, i*6+3);
                 this.vStart.project(camera); 
                 this.vEnd.project(camera); 
                 if ((this.vStart.z > 0.0) && (this.vEnd.z > 0.0)) {
@@ -115,7 +115,7 @@ var PickingObject = {
     setselectedindex: function(selectedvsvxcaveindex)
     {
         centrelinematerial.uniforms.selectedvsvxcaveindex.value = selectedvsvxcaveindex; 
-        enttrianglematerial.uniforms.selectedvsvxcaveindex.value = selectedvsvxcaveindex; 
+        PlotGeometryObject.enttrianglematerial.uniforms.selectedvsvxcaveindex.value = selectedvsvxcaveindex; 
         //for (var i = 0; i < textlabelmaterials.length; i++) 
         //    textlabelmaterials[i].uniforms.closedist.value = closedistvalue; 
     }

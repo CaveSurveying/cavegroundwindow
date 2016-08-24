@@ -167,126 +167,7 @@ function latlngtopt(lat, lng, alt)
 
 
 
-var centrelinematerial; 
-var centrelinebuffergeometry; 
-var minyearvalue = 9999.0, maxyearvalue = 9999.0; 
-function LoadCentrelines(scene)
-{
-    centrelinematerial = new THREE.ShaderMaterial({
-        uniforms: { closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
-                    closedist: { type: 'f', value: 5.0 }, 
-                    yeartime: { type: 'f', value: 9999.0 },
-                    selectedvsvxcaveindex: { type: 'f', value: -1.0 }, 
-                    redalt: { type: 'f', value: redalt },
-                    vfac: { type: 'f', value: vfac } 
-                  }, 
-        vertexShader: getshader('vertexShader_centreline'),
-        fragmentShader: getshader('fragment_shader_centreline'), 
-        depthWrite:true, depthTest:true,  // not sure these work
-        linewidth:3 
-    });
-    
-    var nlegs = svx3d.legindexes.length/2; 
-    var centrelinepositionsbuff = new THREE.BufferAttribute(new Float32Array(nlegs*2*3), 3);
-    var cosslope = new Float32Array(nlegs*2); 
-    var svxcaveindex = new Float32Array(nlegs*2); 
-    var svxyearvalue = new Float32Array(nlegs*2); 
-    var svxscaleInv = 1.0/svx3d.scale;
 
-    var altminF = 0, altmaxF = 0; 
-    for (var i = 0; i < nlegs; i++) {
-        var i0 = svx3d.legindexes[i*2]*3; 
-        var i1 = svx3d.legindexes[i*2+1]*3; 
-        var x0 = -svx3d.legnodes[i0]*svxscaleInv, y0=svx3d.legnodes[i0+2]*svxscaleInv, z0=svx3d.legnodes[i0+1]*svxscaleInv; 
-        var x1 = -svx3d.legnodes[i1]*svxscaleInv, y1=svx3d.legnodes[i1+2]*svxscaleInv, z1=svx3d.legnodes[i1+1]*svxscaleInv; 
-        
-        //var p0 = latlngtopt(svxleg[0], svxleg[1], svxleg[2]); 
-        //var p1 = latlngtopt(svxleg[3], svxleg[4], svxleg[5]); 
-        centrelinepositionsbuff.setXYZ(i*2, x0, y0, z0); 
-        centrelinepositionsbuff.setXYZ(i*2+1, x1, y1, z1); 
-        var dx = x1 - x0, dy = y1 - y0, dz = z1 - z0; 
-        var lcosslope = Math.cos(Math.atan2(dy, Math.sqrt(dx*dx + dz*dz))); 
-        cosslope[i*2] = lcosslope; 
-        cosslope[i*2+1] = lcosslope; 
-        
-        if ((i == 0) || (altminF > svx3d.legnodes[i0+2]))
-            altminF = svx3d.legnodes[i0+2]; 
-        if ((altminF > svx3d.legnodes[i1+2]))
-            altminF = svx3d.legnodes[i1+2]; 
-        if ((i == 0) || (altmaxF < svx3d.legnodes[i1+2]))
-            altmaxF = svx3d.legnodes[i0+2]; 
-        if ((altmaxF < svx3d.legnodes[i1+2]))
-            altmaxF = svx3d.legnodes[i1+2]; 
-            
-        /*
-        svxcaveindex[i*2] = svxleg[6]; 
-        svxcaveindex[i*2+1] = svxleg[6]; 
-        svxyearvalue[i*2] = svxleg[7]; 
-        svxyearvalue[i*2+1] = svxleg[7]; 
-        
-        if (svxleg[7] != 1900) {
-            if ((i == 0) || (svxleg[7] < minyearvalue))  minyearvalue = svxleg[7]; 
-            if ((i == 0) || (svxleg[7] > maxyearvalue))  maxyearvalue = svxleg[7]; 
-        }
-        */
-    }
-    console.log("altminmax", altminF*svxscaleInv, altmaxF*svxscaleInv); 
-    vfac = 0.9/((altmaxF - altminF)*svxscaleInv); 
-    redalt = (0.5 - altmaxF*svxscaleInv*vfac) % 1; 
-    
-    centrelinebuffergeometry = new THREE.BufferGeometry(); 
-    centrelinebuffergeometry.addAttribute('position', centrelinepositionsbuff);
-    centrelinebuffergeometry.addAttribute('cosslope', new THREE.BufferAttribute(cosslope, 1)); 
-    centrelinebuffergeometry.addAttribute('svxcaveindex', new THREE.BufferAttribute(svxcaveindex, 1)); 
-    centrelinebuffergeometry.addAttribute('svxyearvalue', new THREE.BufferAttribute(svxyearvalue, 1)); 
-
-    var contour = new THREE.LineSegments(centrelinebuffergeometry, centrelinematerial);  
-    scene.add(contour); 
-}
-
-var enttrianglematerial; 
-var entgeometry; 
-var entlabelscard = null; 
-function LoadEntrances(scene)
-{
-    var entpositionbuff = new THREE.BufferAttribute(new Float32Array(svxents.length*9), 3); 
-    var entcorner = new Float32Array(svxents.length*3); 
-    var svxcaveindex = new Float32Array(svxents.length*3); 
-    
-    entgeometry = new THREE.BufferGeometry(); 
-    entgeometry.addAttribute('position', entpositionbuff); 
-    entgeometry.addAttribute('pcorner', new THREE.BufferAttribute(entcorner, 1)); 
-    entgeometry.addAttribute('svxcaveindex', new THREE.BufferAttribute(svxcaveindex, 1)); 
-    enttrianglematerial = new THREE.ShaderMaterial({
-        uniforms: { trianglesize: {type: 'f', value: 10.0}, 
-                    aspect: { type: 'f', value: 1.0 }, 
-                    closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
-                    closedist: { type: 'f', value: 5.0 }, 
-                    selectedvsvxcaveindex: { type: 'f', value: -1.0 }, 
-                    redalt: { type: 'f', value: redalt },
-                    vfac: { type: 'f', value: vfac } 
-                  }, 
-        vertexShader: getshader('vertex_shader_enttriangle'),
-        fragmentShader: getshader('fragment_shader_centreline'), 
-        depthWrite:true, depthTest:true, 
-        side: THREE.DoubleSide
-    }); 
-    var enttriangles = new THREE.Mesh(entgeometry, enttrianglematerial);  
-    scene.add(enttriangles); 
-
-    entlabelscard = new THREE.Object3D();
-    for (var i = 0; i < svxents.length; i++) {
-        var p = latlngtopt(svxents[i][1], svxents[i][2], svxents[i][3]); 
-        entpositionbuff.setXYZ(i*3, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+1, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+2, p.x, p.y, p.z); 
-        entcorner[i*3] = 0.0;  entcorner[i*3+1] = 1.0;  entcorner[i*3+2] = 2.0; 
-        svxcaveindex[i*3] = svxents[i][4];  svxcaveindex[i*3+1] = svxents[i][4];  svxcaveindex[i*3+2] = svxents[i][4]; 
-        
-        if (svxents[i][0].match(/p\d+[a-z]?$/) !== null) {
-            PlotGeometryObject.MakeLabel(entlabelscard, svxents[i][0], "rgba(0,200,200,0.95)", p, 0.5);  // rgba(0,200,200,0.95)
-        }
-    }
-    scene.add(entlabelscard);
-}
 
 
 var backgroundscene = null, backgroundcamera = null; 
@@ -333,14 +214,9 @@ function resize()
     var height = vizcontainer.offsetHeight;
     camera.aspect = width / height;
     PlotGeometryObject.resizeP(width, height); 
-    if (enttrianglematerial) {
-        enttrianglematerial.uniforms.aspect.value = camera.aspect; 
-        enttrianglematerial.uniforms.trianglesize.value = 5/width; 
-    }
     camera.updateProjectionMatrix();
     renderer.setSize(width, height);
 }
-
 
 function update(dt) 
 {
@@ -375,9 +251,9 @@ function animate(t)
     }
     var cd = clock.getDelta(); 
     if (yeartimestep != 0) {
-        centrelinematerial.uniforms.yeartime.value = Math.min(maxyearvalue+1, Math.max(minyearvalue, centrelinematerial.uniforms.yeartime.value + cd*yeartimestep)); 
-        document.getElementById("yearcycle").value = centrelinematerial.uniforms.yeartime.value; 
-        if ((centrelinematerial.uniforms.yeartime.value >= maxyearvalue+1) && (yeartimestep > 0))
+        PlotGeometryObject.centrelinematerial.uniforms.yeartime.value = Math.min(PlotGeometryObject.maxyearvalue+1, Math.max(PlotGeometryObject.minyearvalue, PlotGeometryObject.centrelinematerial.uniforms.yeartime.value + cd*yeartimestep)); 
+        document.getElementById("yearcycle").value = PlotGeometryObject.centrelinematerial.uniforms.yeartime.value; 
+        if ((PlotGeometryObject.centrelinematerial.uniforms.yeartime.value >= PlotGeometryObject.maxyearvalue+1) && (yeartimestep > 0))
             yeartimestep = 0; 
     }
     
@@ -407,6 +283,7 @@ function quantshowhide()
         quantshowhidetimeout = null; 
     }
 }
+
 function quantshowhidedelay(dt)  { if (quantshowhidetimeout === null)  quantshowhidetimeout = setTimeout(quantshowhide, dt);  }
 function quantshowshow(qtext)  
 { 
@@ -425,13 +302,6 @@ function quantshowshow(qtext)
     }
 }
 
-function setclosedistvalue(closedistvalue)
-{
-    centrelinematerial.uniforms.closedist.value = closedistvalue; 
-    if (enttrianglematerial) 
-        enttrianglematerial.uniforms.closedist.value = closedistvalue; 
-    PlotGeometryObject.setclosedistvalueP(closedistvalue); 
-}
 
 
 var touchStart = new THREE.Vector2(), touchEnd = new THREE.Vector2(), touchDelta = new THREE.Vector2();
@@ -474,7 +344,7 @@ function touchmovefunc(event)
         touchDelta.subVectors(touchEnd, touchStart); 
         if ((touchmovestate == 1) && (Math.max(Math.abs(touchDelta.x), Math.abs(touchDelta.y)*2) > touchmovepixelsrequired)) {
             touchmovestate = (Math.abs(touchDelta.x) >= Math.abs(touchDelta.y) ? 2 : 3); 
-            touchmovevalueStart = (touchmovestate == 2 ? controls.alphaoffset : centrelinematerial.uniforms.closedist.value); 
+            touchmovevalueStart = (touchmovestate == 2 ? controls.alphaoffset : PlotGeometryObject.centrelinematerial.uniforms.closedist.value); 
             quantshowshow("**");   // drops through
             //if (touchmovestate == 2)
             //    controls.alphalock = true; 
@@ -490,8 +360,8 @@ function touchmovefunc(event)
             controls.alphaoffset = touchmovevalueStart + touchDelta.x*0.3;  
             quantshowtextelement.textContent = "A-offs: "+controls.alphaoffset.toFixed(0); 
         } else if (touchmovestate == 3) {
-            setclosedistvalue(Math.max(0.0, touchmovevalueStart - Math.max(1.0, touchmovevalueStart)*touchDelta.y*0.02)); 
-            quantshowtextelement.textContent = "Light: "+(centrelinematerial.uniforms.closedist.value).toFixed(0)+"m"; 
+            PlotGeometryObject.setclosedistvalueP(Math.max(0.0, touchmovevalueStart - Math.max(1.0, touchmovevalueStart)*touchDelta.y*0.02)); 
+            quantshowtextelement.textContent = "Light: "+(PlotGeometryObject.centrelinematerial.uniforms.closedist.value).toFixed(0)+"m"; 
         }
     } else if (event.touches.length == 2) {
         if (touchmovestate == 4) {
@@ -598,12 +468,14 @@ function init()
     scene.add(light);
 
     PlotGeometryObject.LoadMountains(svx3d.landmarks, 1.0/svx3d.scale); 
-    LoadCentrelines(scene); 
-    //LoadEntrances(scene); 
+    PlotGeometryObject.LoadCentrelines(svx3d.legnodes, svx3d.legindexes, 1.0/svx3d.scale); 
+    //PlotGeometryObject.LoadEntrances(svx3d.entrances, 1.0/svx3d.scale); 
+    PlotGeometryObject.LoadPassageTubes(svx3d.passagenodes, svx3d.passagetriangles, 1.0/svx3d.scale); 
     
     PositionObject.LoadTrail(scene); 
     //PositionObject.LoadTrailRods(scene); 
     
+
     PositionObject.LoadFootpos(scene); 
     //PositionObject.LoadPickPos(scene); 
     //LoadVideoBackground(); 

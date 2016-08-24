@@ -136,7 +136,7 @@ var PositionObject =
         this.footvelocitybuff = new THREE.Geometry(); 
         this.footvelocitybuff.vertices.push(new THREE.Vector3(0, 0, 0)); 
         this.footvelocitybuff.vertices.push(new THREE.Vector3(0, 0, 1)); 
-        var footvelocitymaterial = new THREE.LineBasicMaterial({ color: 0x22FF11, linewidth: 3 }); 
+        var footvelocitymaterial = new THREE.LineBasicMaterial({ color: 0x44FFDD, linewidth: 2 }); 
         this.footvelocitylines = new THREE.LineSegments(this.footvelocitybuff, footvelocitymaterial); 
         scene.add(this.footvelocitylines); 
     },
@@ -161,7 +161,6 @@ var PositionObject =
         this.pickposmesh = new THREE.Mesh(buffergeometry, new THREE.MeshBasicMaterial({ color: "red" }));  
         scene.add(this.pickposmesh); 
     }, 
-
 
 
 
