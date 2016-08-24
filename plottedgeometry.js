@@ -9,6 +9,7 @@ var PlotGeometryObject =
 
     centrelinematerial: null, 
     centrelinebuffergeometry: null,  
+    centrelines: null,
     minyearvalue: 9999.0, 
     maxyearvalue: 9999.0, 
     altminF: 0, 
@@ -115,17 +116,17 @@ var PlotGeometryObject =
             linewidth:3 
         });
         
-        var nlegs = svx3d.legindexes.length/2; 
+        var nlegs = legindexes.length/2; 
         var centrelinepositionsbuff = new THREE.BufferAttribute(new Float32Array(nlegs*2*3), 3);
         var cosslope = new Float32Array(nlegs*2); 
         var svxcaveindex = new Float32Array(nlegs*2); 
         var svxyearvalue = new Float32Array(nlegs*2); 
 
         for (var i = 0; i < nlegs; i++) {
-            var i0 = svx3d.legindexes[i*2]*3; 
-            var i1 = svx3d.legindexes[i*2+1]*3; 
-            var x0 = -svx3d.legnodes[i0]*svxscaleInv, y0=svx3d.legnodes[i0+2]*svxscaleInv, z0=svx3d.legnodes[i0+1]*svxscaleInv; 
-            var x1 = -svx3d.legnodes[i1]*svxscaleInv, y1=svx3d.legnodes[i1+2]*svxscaleInv, z1=svx3d.legnodes[i1+1]*svxscaleInv; 
+            var i0 = legindexes[i*2]*3; 
+            var i1 = legindexes[i*2+1]*3; 
+            var x0 = -legnodes[i0]*svxscaleInv, y0=legnodes[i0+2]*svxscaleInv, z0=legnodes[i0+1]*svxscaleInv; 
+            var x1 = -legnodes[i1]*svxscaleInv, y1=legnodes[i1+2]*svxscaleInv, z1=legnodes[i1+1]*svxscaleInv; 
             
             //var p0 = latlngtopt(svxleg[0], svxleg[1], svxleg[2]); 
             //var p1 = latlngtopt(svxleg[3], svxleg[4], svxleg[5]); 
@@ -136,14 +137,14 @@ var PlotGeometryObject =
             cosslope[i*2] = lcosslope; 
             cosslope[i*2+1] = lcosslope; 
             
-            if ((i == 0) || (altminF > svx3d.legnodes[i0+2]))
-                altminF = svx3d.legnodes[i0+2]; 
-            if ((altminF > svx3d.legnodes[i1+2]))
-                altminF = svx3d.legnodes[i1+2]; 
-            if ((i == 0) || (altmaxF < svx3d.legnodes[i1+2]))
-                altmaxF = svx3d.legnodes[i0+2]; 
-            if ((altmaxF < svx3d.legnodes[i1+2]))
-                altmaxF = svx3d.legnodes[i1+2]; 
+            if ((i == 0) || (altminF > legnodes[i0+2]))
+                altminF = legnodes[i0+2]; 
+            if ((altminF > legnodes[i1+2]))
+                altminF = legnodes[i1+2]; 
+            if ((i == 0) || (altmaxF < legnodes[i1+2]))
+                altmaxF = legnodes[i0+2]; 
+            if ((altmaxF < legnodes[i1+2]))
+                altmaxF = legnodes[i1+2]; 
                 
             /*
             svxcaveindex[i*2] = svxleg[6]; 
@@ -167,8 +168,8 @@ var PlotGeometryObject =
         this.centrelinebuffergeometry.addAttribute('svxcaveindex', new THREE.BufferAttribute(svxcaveindex, 1)); 
         this.centrelinebuffergeometry.addAttribute('svxyearvalue', new THREE.BufferAttribute(svxyearvalue, 1)); 
 
-        var contour = new THREE.LineSegments(this.centrelinebuffergeometry, this.centrelinematerial);  
-        this.scene.add(contour); 
+        this.centrelines = new THREE.LineSegments(this.centrelinebuffergeometry, this.centrelinematerial);  
+        this.scene.add(this.centrelines); 
     },
     
     LoadEntrances: function(svxents, svxscaleInv)
@@ -215,18 +216,22 @@ var PlotGeometryObject =
     LoadPassageTubes: function(passagenodes, passagetriangles, svxscaleInv) 
     {
         var nnodes = passagenodes.length/3; 
-        ssgvertbuff = new THREE.Float32Attribute(new Float32Array(nnodes*3), 3); 
+        var ssgvertbuff = new THREE.Float32Attribute(new Float32Array(nnodes*3), 3); 
         for (var i = 0; i < nnodes; i++) {
             var x0 = -passagenodes[i*3]*svxscaleInv, y0=passagenodes[i*3+2]*svxscaleInv, z0=passagenodes[i*3+1]*svxscaleInv; 
             ssgvertbuff.setXYZ(i, x0, y0, z0); 
         }
         var indices = new Uint16Array(passagetriangles.length); 
-        for (var i = 0; i < passagetriangles.length; i++)
-            indices[i] = passagetriangles[i]; 
+        var ntris = passagetriangles.length/3; 
+        for (var i = 0; i < ntris; i++) {
+            indices[i*3] = passagetriangles[i*3]; 
+            indices[i*3+2] = passagetriangles[i*3+1]; // needed to invert the orientation
+            indices[i*3+1] = passagetriangles[i*3+2]; 
+        }
         var buffergeometry = new THREE.BufferGeometry(); 
         buffergeometry.setIndex(new THREE.BufferAttribute(indices, 1)); 
         buffergeometry.addAttribute('position', ssgvertbuff);
-        this.passagetubes = new THREE.Mesh(buffergeometry, new THREE.MeshBasicMaterial({ color: 0xDD44EE }));  
+        this.passagetubes = new THREE.Mesh(buffergeometry, new THREE.MeshBasicMaterial({ color: 0xDD44EE, shading: THREE.FlatShading, depthWrite:true, depthTest:true }));  
         this.scene.add(this.passagetubes); 
     }, 
     

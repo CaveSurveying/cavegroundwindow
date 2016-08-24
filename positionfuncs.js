@@ -136,7 +136,7 @@ var PositionObject =
         this.footvelocitybuff = new THREE.Geometry(); 
         this.footvelocitybuff.vertices.push(new THREE.Vector3(0, 0, 0)); 
         this.footvelocitybuff.vertices.push(new THREE.Vector3(0, 0, 1)); 
-        var footvelocitymaterial = new THREE.LineBasicMaterial({ color: 0x44FFDD, linewidth: 2 }); 
+        var footvelocitymaterial = new THREE.LineBasicMaterial({ color: 0x44FFDD, linewidth: 2/*, depthTest: false, depthWrite: false*/ }); 
         this.footvelocitylines = new THREE.LineSegments(this.footvelocitybuff, footvelocitymaterial); 
         scene.add(this.footvelocitylines); 
     },
