@@ -5,10 +5,11 @@ python ../survexprocessing/parse3ddmp.py --js=test.js --svx=test.svx
 
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
-
+// * create a shader for the triangles, in some depth colours and handle steepness
+// * find some steepness on lines capability using the dt values
+// * then can make the centreline case use indexes for the linesegments rather than repeat all the nodes
 // * convert entrances
 // * add an entrance case
-// * convert *fix type mountains (like the entrances)
 // * parallel lists for the index points in each
 // * ability to select different js files
 // * output tubes and try out
@@ -28,27 +29,9 @@ adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 // * handle alias to . survey stations
 
 
-// things to do
-// * explain the alt discrepancy in the GPS reading
-// * find what GPS reading should be the vent valley entrance
-// * altG etc into the positionobject
-
-
 *fix	3c20ae	69907.233	77407.244	268.392	;sdE 0.0007m, sdN 0.0005m, sdElev 0.0013m
 GPS readings were 54.195764  -2.5627084   275 (but in system is 322)
 getting readings in field of 140 from gpsstatus 187 on app   -- always 47m too high!
-
-
-
-
-
-// * datalogging picture into the talk slides
-// * tunnocks entrance photo
-// * go through again and copy to phone and then to Becka's computer
-
-// * sump diving picture
-// * charging of batteries, gopros
-// * load up bos3 waypoints onto 6030
 
 
 // * initialize with high view looking down
@@ -68,12 +51,12 @@ getting readings in field of 140 from gpsstatus 187 on app   -- always 47m too h
 // * picking of cave passage as well
 // * small hops and sideways hops (in relation to the screen, poss using the accelerometer)
 // * Rauchercan data -- can't find
-// * put some passage widths into the picture using attributes
 // * do the mag check early on on startup
 // * set up links to caves
 
 
 // done
+// * convert *fix type mountains (like the entrances)
 // * shift the makecentrelines and entrances into the plottedgeometry.js file
 // * dot tracking changed to vertical lines from sea level
 // * the north position thing  set gamma=0.1

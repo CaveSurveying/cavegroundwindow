@@ -19,6 +19,7 @@ var PlotGeometryObject =
     entgeometry: null, 
     entlabelscard: null, 
 
+    passagetubematerial: null,
     passagetubes: null, 
     
     textlabelmaterials: [ ], 
@@ -215,6 +216,14 @@ var PlotGeometryObject =
 
     LoadPassageTubes: function(passagenodes, passagetriangles, svxscaleInv) 
     {
+        this.passagetubematerial = new THREE.ShaderMaterial({
+            uniforms: { redalt: { type: 'f', value: redalt },
+                        vfac: { type: 'f', value: vfac*5 } 
+                      }, 
+            vertexShader: getshader('vertex_shader_passage'),
+            fragmentShader: getshader('fragment_shader_passage'), 
+            depthWrite:true, depthTest:true 
+        });
         var nnodes = passagenodes.length/3; 
         var ssgvertbuff = new THREE.Float32Attribute(new Float32Array(nnodes*3), 3); 
         for (var i = 0; i < nnodes; i++) {
@@ -231,7 +240,8 @@ var PlotGeometryObject =
         var buffergeometry = new THREE.BufferGeometry(); 
         buffergeometry.setIndex(new THREE.BufferAttribute(indices, 1)); 
         buffergeometry.addAttribute('position', ssgvertbuff);
-        this.passagetubes = new THREE.Mesh(buffergeometry, new THREE.MeshBasicMaterial({ color: 0xDD44EE, shading: THREE.FlatShading, depthWrite:true, depthTest:true }));  
+        //this.passagetubematerial = new THREE.MeshBasicMaterial({ color: 0xDD44EE, shading: THREE.FlatShading, depthWrite:true, depthTest:true }); 
+        this.passagetubes = new THREE.Mesh(buffergeometry, this.passagetubematerial);  
         this.scene.add(this.passagetubes); 
     }, 
     
