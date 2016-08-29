@@ -470,8 +470,10 @@ function init()
     PlotGeometryObject.LoadMountains(svx3d.landmarks, 1.0/svx3d.scale); 
     PlotGeometryObject.LoadCentrelines(svx3d.legnodes, svx3d.legindexes, 1.0/svx3d.scale); 
     //PlotGeometryObject.LoadEntrances(svx3d.entrances, 1.0/svx3d.scale); 
-    PlotGeometryObject.LoadPassageTubes(svx3d.passagenodes, svx3d.passagetriangles, 1.0/svx3d.scale); 
-    
+    //PlotGeometryObject.LoadPassageTubes(svx3d.passagenodes, svx3d.passagetriangles, 1.0/svx3d.scale); 
+    PlotGeometryObject.LoadPassageTubesP(svx3d.passagexcsseq, svx3d.passagexcs, 1.0/svx3d.scale); 
+ 
+ 
     PositionObject.LoadTrail(scene); 
     //PositionObject.LoadTrailRods(scene); 
     
@@ -508,8 +510,8 @@ function init()
 }
 
 var script = document.createElement('script');
-//script.setAttribute('src', 'maxpleasure2.js');
-script.setAttribute('src', 'test.js');
+script.setAttribute('src', 'maxpleasure2.js');
+//script.setAttribute('src', 'test.js');
 script.setAttribute('type', 'text/javascript');
 document.getElementsByTagName('head')[0].appendChild(script);
 

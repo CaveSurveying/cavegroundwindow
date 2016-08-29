@@ -245,6 +245,65 @@ var PlotGeometryObject =
         this.scene.add(this.passagetubes); 
     }, 
     
+    LoadPassageTubesP: function(passagexcsseq, xcs, svxscaleInv) 
+    {
+        var nxcs = 0; 
+        for (var j = 0; j < passagexcsseq.length; j++)
+            nxcs += passagexcsseq[j]; 
+        console.assert(xcs.length == nxcs*3*4); 
+        this.passagetubematerial = new THREE.ShaderMaterial({
+            uniforms: { redalt: { type: 'f', value: redalt },
+                        vfac: { type: 'f', value: vfac*5 } 
+                      }, 
+            vertexShader: getshader('vertex_shader_passage'),
+            fragmentShader: getshader('fragment_shader_passage'), 
+            wireframe: true, 
+            depthWrite:true, depthTest:true 
+        });
+        var nnodes = xcs.length/3; 
+        var ssgvertbuff = new THREE.Float32Attribute(new Float32Array(nnodes*3), 3); 
+        for (var i = 0; i < nnodes; i++) {
+            var x0 = -xcs[i*3]*svxscaleInv, y0=xcs[i*3+2]*svxscaleInv, z0=xcs[i*3+1]*svxscaleInv; 
+            ssgvertbuff.setXYZ(i, x0, y0, z0); 
+        }
+        var ntris = (4*nxcs - 2*passagexcsseq.length)*2; // 4 quads between pairs of xcs plus endcaps
+        var indices = new Uint16Array(ntris*3); 
+        
+        var iquad = 0; 
+        var AddQuad = function(q0, q1, q2, q3) {
+            indices[iquad*6] = q0; 
+            indices[iquad*6+1] = q2; 
+            indices[iquad*6+2] = q1; 
+            indices[iquad*6+3] = q0; 
+            indices[iquad*6+4] = q3; 
+            indices[iquad*6+5] = q2; 
+            iquad++; 
+        }
+        var k = 0; 
+        for (var j = 0; j < passagexcsseq.length; j++) {
+            AddQuad(k+0, k+1, k+2, k+3); 
+            for (var l = 0; l < passagexcsseq[j]-1; l++) {
+                k += 4; 
+                AddQuad(k+0, k+1, k-4+1, k-4+0); 
+                AddQuad(k+1, k+2, k-4+2, k-4+1);
+                AddQuad(k+2, k+3, k-4+3, k-4+2);
+                AddQuad(k+3, k+0, k-4+0, k-4+3);
+            }
+            AddQuad(k+3, k+2, k+1, k+0); 
+            k += 4; 
+        }
+        console.log(k, nxcs, iquad); 
+        console.assert(iquad == (4*nxcs - 2*passagexcsseq.length)); 
+        console.assert(k == 4*nxcs); 
+        
+        var buffergeometry = new THREE.BufferGeometry(); 
+        buffergeometry.setIndex(new THREE.BufferAttribute(indices, 1)); 
+        buffergeometry.addAttribute('position', ssgvertbuff);
+        //this.passagetubematerial = new THREE.MeshBasicMaterial({ color: 0xDD44EE, shading: THREE.FlatShading, depthWrite:true, depthTest:true }); 
+        this.passagetubes = new THREE.Mesh(buffergeometry, this.passagetubematerial);  
+        this.scene.add(this.passagetubes); 
+    }, 
+
     resizeP: function(width, height)
     {
         var aspect = width / height;
