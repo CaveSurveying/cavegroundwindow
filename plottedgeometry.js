@@ -72,6 +72,7 @@ var PlotGeometryObject =
     
     LoadMountains: function(landmarks, svxscaleInv)
     {
+        if (landmarks.length == 0)  return; 
         var peakpositionbuff = new THREE.BufferAttribute(new Float32Array(landmarks.length*9), 3); 
         var peakcorner = new Float32Array(landmarks.length*3); 
         
@@ -257,7 +258,7 @@ var PlotGeometryObject =
                       }, 
             vertexShader: getshader('vertex_shader_passage'),
             fragmentShader: getshader('fragment_shader_passage'), 
-            wireframe: true, 
+            wireframe: false, 
             depthWrite:true, depthTest:true 
         });
         var nnodes = xcs.length/3; 

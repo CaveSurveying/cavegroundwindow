@@ -167,9 +167,6 @@ function latlngtopt(lat, lng, alt)
 
 
 
-
-
-
 var backgroundscene = null, backgroundcamera = null; 
 var videotexture; 
 var backgroundvideo = null; 
@@ -510,8 +507,9 @@ function init()
 }
 
 var script = document.createElement('script');
-script.setAttribute('src', 'maxpleasure2.js');
+//script.setAttribute('src', 'maxpleasure2.js');
 //script.setAttribute('src', 'test.js');
+script.setAttribute('src', 'erin2.js');
 script.setAttribute('type', 'text/javascript');
 document.getElementsByTagName('head')[0].appendChild(script);
 
@@ -519,6 +517,14 @@ function LoadSvx3d(lsvx3d)
 {
     svx3d = lsvx3d; 
     
+    // must get a better way of disabling this one
+    if (svx3d.latp0 === undefined) {
+        console.log("latp0 missing, setting to 0 to disable"); 
+        svx3d.latp0 = 0; 
+        svx3d.lngp0 = 0; 
+        svx3d.altp0 = 0; 
+    }
+
     if (svx3d.nyfac === undefined) {
         var earthrad = 6378137; 
         svx3d.nyfac = 2*Math.PI*earthrad/360; 
@@ -526,6 +532,7 @@ function LoadSvx3d(lsvx3d)
         svx3d.eyfac = 0; 
         svx3d.exfac = svx3d.nyfac*Math.cos(svx3d.latp0*Math.PI/180); 
     }
+    
     svx3d.scaleInv = 1.0/svx3d.scale; 
     latG = svx3d.latp0; 
     lngG = svx3d.lngp0; 
