@@ -224,7 +224,9 @@ var PlotGeometryObject =
             nxcs += passagexcsseq[j]; 
         console.assert(xcs.length == nxcs*3*4); 
         this.passagetubematerial = new THREE.ShaderMaterial({
-            uniforms: { redalt: { type: 'f', value: this.redalt },
+            uniforms: { closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
+                        closedist: { type: 'f', value: 5.0 },  
+                        redalt: { type: 'f', value: this.redalt },
                         vfac: { type: 'f', value: this.vfac } 
                       }, 
             vertexShader: getshader('vertex_shader_passage'),
@@ -295,20 +297,20 @@ var PlotGeometryObject =
     setredalts: function(redalt, vfac)
     {
         if (this.passagetubematerial) {
-           this.passagetubematerial.uniforms.redalt.value = redalt; 
-           this.passagetubematerial.uniforms.vfac.value = vfac; 
+            this.passagetubematerial.uniforms.redalt.value = redalt; 
+            this.passagetubematerial.uniforms.vfac.value = vfac; 
         }
         for (var i = 0; i < this.textlabelmaterials.length; i++) {
             this.textlabelmaterials[i].uniforms.redalt.value = redalt; 
             this.textlabelmaterials[i].uniforms.vfac.value = vfac; 
         }
         if (this.centrelinematerial) {
-           this.centrelinematerial.uniforms.redalt.value = redalt; 
-           this.centrelinematerial.uniforms.vfac.value = vfac; 
+            this.centrelinematerial.uniforms.redalt.value = redalt; 
+            this.centrelinematerial.uniforms.vfac.value = vfac; 
         }
         if (this.enttrianglematerial) {
-           this.enttrianglematerial.uniforms.redalt.value = redalt; 
-           this.enttrianglematerial.uniforms.vfac.value = vfac; 
+            this.enttrianglematerial.uniforms.redalt.value = redalt; 
+            this.enttrianglematerial.uniforms.vfac.value = vfac; 
         }
     },
 
@@ -316,6 +318,8 @@ var PlotGeometryObject =
     {
         if (this.centrelinematerial) 
             this.centrelinematerial.uniforms.closedist.value = closedistvalue; 
+        if (this.passagetubematerial) 
+           this.passagetubematerial.uniforms.closedist.value = closedistvalue; 
         for (var i = 0; i < this.textlabelmaterials.length; i++) 
             this.textlabelmaterials[i].uniforms.closedist.value = closedistvalue; 
         if (this.enttrianglematerial) 

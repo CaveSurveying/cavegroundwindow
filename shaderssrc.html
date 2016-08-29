@@ -1,6 +1,8 @@
   <script id="fragment_shader_passage" type="x-shader/x-fragment">
 uniform float redalt; // deltph shading colours
 uniform float vfac; 
+uniform vec4 closecolour; 
+uniform float closedist; 
 varying float altitude; 
 float midlump(float v, float offset) 
 {
@@ -10,7 +12,9 @@ float midlump(float v, float offset)
 void main(void) 
 {
     vec4 ptcolour = vec4(midlump(altitude, redalt), midlump(altitude, redalt-0.667)*0.98, midlump(altitude, redalt-0.333), 1.0); 
-    gl_FragColor = ptcolour; 
+    float fdepth = gl_FragCoord.z / gl_FragCoord.w; 
+    float cfac = clamp((closedist - fdepth)*0.1, 0.0, 0.81); 
+    gl_FragColor = mix(ptcolour, closecolour, cfac); 
 }
   </script>
   <script id="vertex_shader_passage" type="x-shader/x-vertex">

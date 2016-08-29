@@ -7,22 +7,17 @@ adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
 // * light range into passages
 // * light down not so severe in UI
-
-// * create a shader for the triangles, in some depth colours and handle steepness
-// * find some steepness on lines capability using the dt values
+// * move more code into JS files
 // * then can make the centreline case use indexes for the linesegments rather than repeat all the nodes
 // * convert entrances
 // * add an entrance case
 // * parallel lists for the index points in each
 // * ability to select different js files
-// * output tubes and try out
 // * relative to main cave loading thing
 
 // * unhosted.org
 // * make the test.js case work
 
-// * simplify is js code (baseposition as smaller, and  )
-// * move more of the javascript into js files and objects
 // * do Philip's conversion stuff
 // * conversion code to note multiple node names for a node
 // * why isn't the touch screen working on computer?

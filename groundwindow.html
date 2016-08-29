@@ -356,7 +356,7 @@ function touchmovefunc(event)
             controls.alphaoffset = touchmovevalueStart + touchDelta.x*0.3;  
             quantshowtextelement.textContent = "A-offs: "+controls.alphaoffset.toFixed(0); 
         } else if (touchmovestate == 3) {
-            PlotGeometryObject.setclosedistvalueP(Math.max(0.0, touchmovevalueStart - Math.max(1.0, touchmovevalueStart)*touchDelta.y*0.02)); 
+            PlotGeometryObject.setclosedistvalueP(Math.max(0.0, touchmovevalueStart - Math.max(1.0, touchmovevalueStart)*touchDelta.y*(touchDelta.y < 0 ? 0.02 : 0.005))); 
             quantshowtextelement.textContent = "Light: "+(PlotGeometryObject.centrelinematerial.uniforms.closedist.value).toFixed(0)+"m"; 
         }
     } else if (event.touches.length == 2) {
