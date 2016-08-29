@@ -5,6 +5,9 @@ python ../survexprocessing/parse3ddmp.py --js=test.js --svx=test.svx
 
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
+// * light range into passages
+// * light down not so severe in UI
+
 // * create a shader for the triangles, in some depth colours and handle steepness
 // * find some steepness on lines capability using the dt values
 // * then can make the centreline case use indexes for the linesegments rather than repeat all the nodes

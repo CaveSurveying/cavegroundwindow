@@ -14,6 +14,8 @@ var PlotGeometryObject =
     maxyearvalue: 9999.0, 
     altminF: 0, 
     altmaxF: 0, 
+    vfac:0.003972, 
+    redalt: 0.894682,
 
     enttrianglematerial: null,
     entgeometry: null, 
@@ -43,8 +45,8 @@ var PlotGeometryObject =
                         texture: { value: texture1 },
                         closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
                         closedist: { type: 'f', value: 5.0 },  
-                        redalt: { type: 'f', value: redalt },
-                        vfac: { type: 'f', value: vfac } 
+                        redalt: { type: 'f', value: this.redalt },
+                        vfac: { type: 'f', value: this.vfac } 
                       }, 
             vertexShader: getshader('vertex_shader_textlabel'),
             fragmentShader: getshader('fragment_shader_textlabel'), 
@@ -109,8 +111,8 @@ var PlotGeometryObject =
                         closedist: { type: 'f', value: 5.0 }, 
                         yeartime: { type: 'f', value: 9999.0 },
                         selectedvsvxcaveindex: { type: 'f', value: -1.0 }, 
-                        redalt: { type: 'f', value: redalt },
-                        vfac: { type: 'f', value: vfac } 
+                        redalt: { type: 'f', value: this.redalt },
+                        vfac: { type: 'f', value: this.vfac } 
                       }, 
             vertexShader: getshader('vertexShader_centreline'),
             fragmentShader: getshader('fragment_shader_centreline'), 
@@ -139,14 +141,14 @@ var PlotGeometryObject =
             cosslope[i*2] = lcosslope; 
             cosslope[i*2+1] = lcosslope; 
             
-            if ((i == 0) || (altminF > legnodes[i0+2]))
-                altminF = legnodes[i0+2]; 
-            if ((altminF > legnodes[i1+2]))
-                altminF = legnodes[i1+2]; 
-            if ((i == 0) || (altmaxF < legnodes[i1+2]))
-                altmaxF = legnodes[i0+2]; 
-            if ((altmaxF < legnodes[i1+2]))
-                altmaxF = legnodes[i1+2]; 
+            if ((i == 0) || (this.altminF > legnodes[i0+2]))
+                this.altminF = legnodes[i0+2]; 
+            if ((this.altminF > legnodes[i1+2]))
+                this.altminF = legnodes[i1+2]; 
+            if ((i == 0) || (this.altmaxF < legnodes[i1+2]))
+                this.altmaxF = legnodes[i0+2]; 
+            if ((this.altmaxF < legnodes[i1+2]))
+                this.altmaxF = legnodes[i1+2]; 
                 
             /*
             svxcaveindex[i*2] = svxleg[6]; 
@@ -160,9 +162,9 @@ var PlotGeometryObject =
             }
             */
         }
-        console.log("altminmax", altminF*svxscaleInv, altmaxF*svxscaleInv); 
-        vfac = 0.9/((altmaxF - altminF)*svxscaleInv); 
-        redalt = (0.5 - altmaxF*svxscaleInv*vfac) % 1; 
+        console.log("altminmax", this.altminF*svxscaleInv, this.altmaxF*svxscaleInv); 
+        this.vfac = 0.9/((this.altmaxF - this.altminF)*svxscaleInv); 
+        this.redalt = (0.5 - this.altmaxF*svxscaleInv*this.vfac) % 1; 
         
         this.centrelinebuffergeometry = new THREE.BufferGeometry(); 
         this.centrelinebuffergeometry.addAttribute('position', centrelinepositionsbuff);
@@ -190,8 +192,8 @@ var PlotGeometryObject =
                         closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
                         closedist: { type: 'f', value: 5.0 }, 
                         selectedvsvxcaveindex: { type: 'f', value: -1.0 }, 
-                        redalt: { type: 'f', value: redalt },
-                        vfac: { type: 'f', value: vfac } 
+                        redalt: { type: 'f', value: this.redalt },
+                        vfac: { type: 'f', value: this.vfac } 
                       }, 
             vertexShader: getshader('vertex_shader_enttriangle'),
             fragmentShader: getshader('fragment_shader_centreline'), 
@@ -215,37 +217,6 @@ var PlotGeometryObject =
         this.scene.add(this.entlabelscard);
     },
 
-    LoadPassageTubes: function(passagenodes, passagetriangles, svxscaleInv) 
-    {
-        this.passagetubematerial = new THREE.ShaderMaterial({
-            uniforms: { redalt: { type: 'f', value: redalt },
-                        vfac: { type: 'f', value: vfac*5 } 
-                      }, 
-            vertexShader: getshader('vertex_shader_passage'),
-            fragmentShader: getshader('fragment_shader_passage'), 
-            depthWrite:true, depthTest:true 
-        });
-        var nnodes = passagenodes.length/3; 
-        var ssgvertbuff = new THREE.Float32Attribute(new Float32Array(nnodes*3), 3); 
-        for (var i = 0; i < nnodes; i++) {
-            var x0 = -passagenodes[i*3]*svxscaleInv, y0=passagenodes[i*3+2]*svxscaleInv, z0=passagenodes[i*3+1]*svxscaleInv; 
-            ssgvertbuff.setXYZ(i, x0, y0, z0); 
-        }
-        var indices = new Uint16Array(passagetriangles.length); 
-        var ntris = passagetriangles.length/3; 
-        for (var i = 0; i < ntris; i++) {
-            indices[i*3] = passagetriangles[i*3]; 
-            indices[i*3+2] = passagetriangles[i*3+1]; // needed to invert the orientation
-            indices[i*3+1] = passagetriangles[i*3+2]; 
-        }
-        var buffergeometry = new THREE.BufferGeometry(); 
-        buffergeometry.setIndex(new THREE.BufferAttribute(indices, 1)); 
-        buffergeometry.addAttribute('position', ssgvertbuff);
-        //this.passagetubematerial = new THREE.MeshBasicMaterial({ color: 0xDD44EE, shading: THREE.FlatShading, depthWrite:true, depthTest:true }); 
-        this.passagetubes = new THREE.Mesh(buffergeometry, this.passagetubematerial);  
-        this.scene.add(this.passagetubes); 
-    }, 
-    
     LoadPassageTubesP: function(passagexcsseq, xcs, svxscaleInv) 
     {
         var nxcs = 0; 
@@ -253,8 +224,8 @@ var PlotGeometryObject =
             nxcs += passagexcsseq[j]; 
         console.assert(xcs.length == nxcs*3*4); 
         this.passagetubematerial = new THREE.ShaderMaterial({
-            uniforms: { redalt: { type: 'f', value: redalt },
-                        vfac: { type: 'f', value: vfac*5 } 
+            uniforms: { redalt: { type: 'f', value: this.redalt },
+                        vfac: { type: 'f', value: this.vfac } 
                       }, 
             vertexShader: getshader('vertex_shader_passage'),
             fragmentShader: getshader('fragment_shader_passage'), 
@@ -321,9 +292,30 @@ var PlotGeometryObject =
             this.enttrianglematerial.uniforms.trianglesize.value = 5/width; 
         }
     },
+    setredalts: function(redalt, vfac)
+    {
+        if (this.passagetubematerial) {
+           this.passagetubematerial.uniforms.redalt.value = redalt; 
+           this.passagetubematerial.uniforms.vfac.value = vfac; 
+        }
+        for (var i = 0; i < this.textlabelmaterials.length; i++) {
+            this.textlabelmaterials[i].uniforms.redalt.value = redalt; 
+            this.textlabelmaterials[i].uniforms.vfac.value = vfac; 
+        }
+        if (this.centrelinematerial) {
+           this.centrelinematerial.uniforms.redalt.value = redalt; 
+           this.centrelinematerial.uniforms.vfac.value = vfac; 
+        }
+        if (this.enttrianglematerial) {
+           this.enttrianglematerial.uniforms.redalt.value = redalt; 
+           this.enttrianglematerial.uniforms.vfac.value = vfac; 
+        }
+    },
+
     setclosedistvalueP: function(closedistvalue)
     {
-        this.centrelinematerial.uniforms.closedist.value = closedistvalue; 
+        if (this.centrelinematerial) 
+            this.centrelinematerial.uniforms.closedist.value = closedistvalue; 
         for (var i = 0; i < this.textlabelmaterials.length; i++) 
             this.textlabelmaterials[i].uniforms.closedist.value = closedistvalue; 
         if (this.enttrianglematerial) 

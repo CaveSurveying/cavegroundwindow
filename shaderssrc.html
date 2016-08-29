@@ -31,7 +31,7 @@ uniform vec4 closecolour;
 uniform float closedist; 
 uniform float selectedvsvxcaveindex; 
 uniform float yeartime; 
-uniform float redalt; // deltph shading colours
+uniform float redalt; 
 uniform float vfac; 
 varying float altitude; 
 varying float vcosslope; 
@@ -47,7 +47,6 @@ void main(void)
     const float yearwhite = 180.0/365.0; 
     if (vsvxyearvalue > yeartime)
         discard; 
-    float redalt = 0.1; 
     vec4 ptcolour = vec4(midlump(altitude, redalt), midlump(altitude, redalt-0.667)*0.98, midlump(altitude, redalt-0.333), 1.0); 
     vec4 sptcolour = mix(ptcolour, vec4(0.0, 0.0, 0.0, 1.0), 0.6*(1.0-vcosslope)); 
     float fdepth = gl_FragCoord.z / gl_FragCoord.w; 

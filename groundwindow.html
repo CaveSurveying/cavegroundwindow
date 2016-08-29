@@ -60,7 +60,6 @@
 function getshader(k) { return shaders[k]; };
 
 var svx3d;   // the structure pulled in that is generated from the 
-var vfac = 0.003972, redalt = 0.894682;
       
 var basepositionOrigin = [0,0,0,0]; 
 var latR, lngR, altR, latG, lngG, altG; 
@@ -464,12 +463,11 @@ function init()
     light.position.set(0, 2500, 0);
     scene.add(light);
 
+    PlotGeometryObject.LoadPassageTubesP(svx3d.passagexcsseq, svx3d.passagexcs, 1.0/svx3d.scale); // before centrelines because they overwrite in the depth buffer
     PlotGeometryObject.LoadMountains(svx3d.landmarks, 1.0/svx3d.scale); 
     PlotGeometryObject.LoadCentrelines(svx3d.legnodes, svx3d.legindexes, 1.0/svx3d.scale); 
     //PlotGeometryObject.LoadEntrances(svx3d.entrances, 1.0/svx3d.scale); 
-    //PlotGeometryObject.LoadPassageTubes(svx3d.passagenodes, svx3d.passagetriangles, 1.0/svx3d.scale); 
-    PlotGeometryObject.LoadPassageTubesP(svx3d.passagexcsseq, svx3d.passagexcs, 1.0/svx3d.scale); 
- 
+    PlotGeometryObject.setredalts(PlotGeometryObject.redalt, PlotGeometryObject.vfac); 
  
     PositionObject.LoadTrail(scene); 
     //PositionObject.LoadTrailRods(scene); 
@@ -478,6 +476,7 @@ function init()
     PositionObject.LoadFootpos(scene); 
     //PositionObject.LoadPickPos(scene); 
     //LoadVideoBackground(); 
+
     
     scene.fog = new THREE.Fog(0x202020, 10, 20000);  // near and far
         
