@@ -6,6 +6,8 @@ var PokeUI = {
     touchtime: null, 
     touchmovestate: 0, // 1 is touchdrag, 2 is dragging left-right for alpha compass rotate, 3 for depth of fogbrightness, 4 pinch for FOV change, 5 for point selection
     touchmovevalueStart: null, 
+    stgsmdisplacementx:0, stgsmdisplacementy:0, stgsmdisplacementz:0, 
+    bdraggsmmode: false, 
     
     touchstartfunc: function(event) 
     {
@@ -19,6 +21,11 @@ var PokeUI = {
             this.touchmovevalueStart = camera.fov; 
             quantshowshow("**"); 
             this.touchmovestate = 4; 
+        }
+        if (this.bdraggsmmode) {
+            this.stgsmdisplacementx = PositionObject.gsmdisplacementx; 
+            this.stgsmdisplacementy = PositionObject.gsmdisplacementy; 
+            this.stgsmdisplacementz = PositionObject.gsmdisplacementz; 
         }
     }, 
 
@@ -37,7 +44,10 @@ var PokeUI = {
     {
         event.preventDefault(); 
         event.stopPropagation(); 
+        var touchmovedistance = 0.0; 
+        var touchmovestateN = 0; 
         var touchmovepixelsrequired = 20; 
+        
         if (event.touches.length == 1) {
             this.touchEnd.set(event.touches[0].pageX, event.touches[0].pageY);
             this.touchDelta.subVectors(this.touchEnd, this.touchStart); 
@@ -48,27 +58,55 @@ var PokeUI = {
                 //if (this.touchmovestate == 2)
                 //    controls.alphalock = true; 
             }
-            if  ((this.touchmovestate == 1) && (clock.elapsedTime - this.touchtime > 1)) {
+            if  ((this.touchmovestate == 1) && (clock.elapsedTime - this.touchtime > 1.00)) {
                 this.touchmovestate = 5; 
                 PickingObject.selecteffort(this.touchStart.x, this.touchStart.y, "touchholdmove")
             }
 
             if (this.touchmovestate == 2) {
-                //controls.alpha += THREE.Math.degToRad(touchDelta.x*0.1);  // didnt work
-                //touchStart.set(touchEnd.x, touchEnd.y); // make incremental so the holding flag within the controls can also work
-                controls.alphaoffset = this.touchmovevalueStart + this.touchDelta.x*0.3;  
-                quantshowtextelement.textContent = "A-offs: "+controls.alphaoffset.toFixed(0); 
+                touchmovestateN = 2; 
+                touchmovedistance = this.touchDelta.x; 
             } else if (this.touchmovestate == 3) {
-                PlotGeometryObject.setclosedistvalueP(Math.max(0.0, this.touchmovevalueStart - Math.max(1.0, this.touchmovevalueStart)*this.touchDelta.y*(this.touchDelta.y < 0 ? 0.02 : 0.005))); 
-                quantshowtextelement.textContent = "Light: "+(PlotGeometryObject.centrelinematerial.uniforms.closedist.value).toFixed(0)+"m"; 
+                touchmovestateN = 3; 
+                touchmovedistance = this.touchDelta.y; 
+            } else if (this.touchmovestate == 4) {
+                console.log("finger off"); // should end
             }
-        } else if (event.touches.length == 2) {
+        } else if (event.touches.length == 2) {  // pinch gesture
             if (this.touchmovestate == 4) {
                 this.touchEnd.set(event.touches[1].pageX - event.touches[0].pageX, event.touches[1].pageX - event.touches[0].pageY); 
-                camera.fov = Math.min(175.0, Math.max(1.0, this.touchmovevalueStart*(this.touchStart.length()/this.touchEnd.length()))); 
+                touchmovestateN = 4; 
+                touchmovedistance = this.touchStart.length()/this.touchEnd.length(); 
+                if (this.bdraggsmmode)
+                    touchmovedistance = this.touchEnd.length() - this.touchStart.length(); 
+            } 
+        }
+            
+        // activate the gesture
+        if (!this.bdraggsmmode) {
+            if (touchmovestateN == 2) {
+                controls.alphaoffset = this.touchmovevalueStart + touchmovedistance*0.3;  
+                quantshowtextelement.textContent = "A-offs: "+controls.alphaoffset.toFixed(0); 
+            } else if (touchmovestateN == 3) {
+                PlotGeometryObject.setclosedistvalueP(Math.max(0.0, this.touchmovevalueStart - Math.max(1.0, this.touchmovevalueStart)*touchmovedistance*(touchmovedistance < 0 ? 0.02 : 0.005))); 
+                quantshowtextelement.textContent = "Light: "+(PlotGeometryObject.centrelinematerial.uniforms.closedist.value).toFixed(0)+"m"; 
+            } else if (touchmovestateN == 4) { 
+                camera.fov = Math.min(175.0, Math.max(1.0, this.touchmovevalueStart*touchmovedistance)); 
                 quantshowtextelement.textContent = "FOV: "+camera.fov.toFixed(0)+"deg"; 
+            } 
+        } else {
+            if (touchmovestateN == 2) {
+                PositionObject.gsmdisplacementx = this.stgsmdisplacementx + touchmovedistance*0.1; 
+            } else if (touchmovestateN == 3) {
+                PositionObject.gsmdisplacementy = this.stgsmdisplacementy + touchmovedistance*0.1; 
+            } else if (touchmovestateN == 4) {
+                PositionObject.gsmdisplacementz = this.stgsmdisplacementz + touchmovedistance*0.1; 
+            }
+            if ((touchmovestateN >= 2) && (touchmovestateN <= 4)) {
+                quantshowtextelement.textContent = "gsm x:"+PositionObject.gsmdisplacementx.toFixed(0)+"m y:"+PositionObject.gsmdisplacementy.toFixed(0)+"m z"+PositionObject.gsmdisplacementz.toFixed(0)+"m"; 
             }
         }
+        
         return false; 
     }, 
 
@@ -80,6 +118,29 @@ var PokeUI = {
         if (this.touchmovestate > 0)
             quantshowhidedelay(1500); 
         this.touchmovestate = 0; 
-    }
-}; 
+    }, 
     
+    keyhorizstep: 20.0, 
+    keyaltstep: 10.0, 
+    keydowncontrols: function(event)
+    {
+        var mv = { }; 
+        if (event.keyCode == 37)       mv[event.shiftKey ? "x" : "rx"] = -1;   // left cursor
+        else if (event.keyCode == 39)  mv[event.shiftKey ? "x" : "rx"] = 1;    // right cursor
+        else if (event.keyCode == 38)  mv[event.shiftKey ? "y" : "ry"] = 1;    // up cursor
+        else if (event.keyCode == 40)  mv[event.shiftKey ? "y" : "ry"] = -1;   // down cursor
+        else if (event.keyCode == 33)  mv[event.shiftKey ? "z" : "rz"] = 1;    // page up
+        else if (event.keyCode == 34)  mv[event.shiftKey ? "z" : "rz"] = -1;   // page down
+        if (mv.rx || mv.ry || mv.rz)  {
+            if (mv.rx)  GdeviceOrientation.gamma += mv.rx*5; 
+            if (mv.ry)  GdeviceOrientation.beta += mv.ry*5; 
+            if (mv.rz)  GdeviceOrientation.alpha += mv.rz*5; 
+        } else if (mv.x || mv.y || mv.z) {
+            PositionObject.gsmdisplacementx += (mv.x|0)*this.keyhorizstep; 
+            PositionObject.gsmdisplacementy += (mv.y|0)*this.keyhorizstep; 
+            PositionObject.gsmdisplacementz += (mv.z|0)*this.keyaltstep; 
+            PositionObject.SetCameraPositionG(); 
+            PositionObject.TrailUpdate(); 
+        }
+    }
+};

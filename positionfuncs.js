@@ -165,6 +165,7 @@ var PositionObject =
         if (this.hopmode == 0)
             this.hopheight = lhopheight; 
         this.hopmode = (this.hopmode == 0 ? 1 : -1); 
+        document.getElementById("camerahop").className = "selected"; 
         this.hoptime = clock.elapsedTime; 
     }, 
 
@@ -180,6 +181,8 @@ var PositionObject =
         if (hsecs > 2) {
             this.hoptime = null; 
             this.hopmode = (this.hopmode == 1 ? 2 : 0); 
+            if (this.hopmode == 0)
+                document.getElementById("camerahop").className = ""; 
             return (this.hopmode === 2 ? this.hopheight : 0); 
         }
         var x = Math.abs((hsecs-2)/2); 
@@ -239,6 +242,7 @@ var PositionObject =
                     svxview = svxviewcurrentgps; 
                     quantshowshow("Moving GPS origin to the caves as dist="+distcave.toFixed(3)+"km>20km"); 
                     console.log("Moving GPS origin to the caves as dist="+distcave.toFixed(3)+"km>20km"); 
+                    document.getElementById("reset31").className = "selected"; 
                     quantshowhidedelay(4500); 
                 }
             }

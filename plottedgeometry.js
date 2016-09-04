@@ -286,7 +286,6 @@ var PlotGeometryObject =
             AddQuad(k+3, k+2, k+1, k+0, (passagexcsseq[j]%2 + 2)); 
             k += 4; 
         }
-        console.log(k, nxcs, iquad); 
         console.assert(iquad == (4*nxcs - 2*passagexcsseq.length)); 
         console.assert(k == 4*nxcs); 
         
@@ -346,6 +345,13 @@ var PlotGeometryObject =
             this.textlabelmaterials[i].uniforms.closedist.value = closedistvalue; 
         if (this.enttrianglematerial) 
             this.enttrianglematerial.uniforms.closedist.value = closedistvalue; 
+    }, 
+
+    togglelabels: function(event) {
+        if (this.entlabelscard)
+            this.entlabelscard.visible = !this.entlabelscard.visible; 
+        PositionObject.footposmesh.visible = !PositionObject.footposmesh.visible; 
+        document.getElementById("labelsonoff").className = (PositionObject.footposmesh.visible ? "" : "selected"); 
     }
 };
 
