@@ -405,8 +405,8 @@ function init()
         else if (event.keyCode == 34)  mv[event.shiftKey ? "z" : "rz"] = -1;   // page down
         if (mv.rx || mv.ry || mv.rz)  {
             if (mv.rx)  GdeviceOrientation.gamma += mv.rx*5; 
-            if (mv.rz)  GdeviceOrientation.beta += mv.ry*5; 
-            if (mv.ry)  GdeviceOrientation.alpha += mv.rz*5; 
+            if (mv.ry)  GdeviceOrientation.beta += mv.ry*5; 
+            if (mv.rz)  GdeviceOrientation.alpha += mv.rz*5; 
         } else if (mv.x || mv.y || mv.z) {
             PositionObject.gsmdisplacementx += (mv.x|0)*keyhorizstep; 
             PositionObject.gsmdisplacementy += (mv.y|0)*keyhorizstep; 
@@ -434,7 +434,6 @@ function init()
     PositionObject.LoadFootpos(scene); 
     //PositionObject.LoadPickPos(scene); 
     //LoadVideoBackground(); 
-
     
     scene.fog = new THREE.Fog(0x202020, 10, 20000);  // near and far
         
@@ -488,8 +487,8 @@ function LoadSvx3d(lsvx3d)
 
 // add GPS reader to this or do fake positions
 // [must put anonymous functions in here to get this=obect rather than PositionObject.geo_success pointer directly which gets this=Window]
-//var watchID = navigator.geolocation.watchPosition(function(p) { PositionObject.geo_success(p); }, function() { PositionObject.geo_error(); }, { enableHighAccuracy:true, timeout:17000, maximumAge:20000 }); 
-fakegpsgenerator(); // for desktop use
+var watchID = navigator.geolocation.watchPosition(function(p) { PositionObject.geo_success(p); }, function() { PositionObject.geo_error(); }, { enableHighAccuracy:true, timeout:17000, maximumAge:20000 }); 
+//fakegpsgenerator(); // for desktop use
 
   </script>
   </body>
