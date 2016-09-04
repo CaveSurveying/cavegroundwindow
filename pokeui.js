@@ -8,6 +8,10 @@ var PokeUI = {
     touchmovevalueStart: null, 
     stgsmdisplacementx:0, stgsmdisplacementy:0, stgsmdisplacementz:0, 
     bdraggsmmode: false, 
+
+    accthresh: 6.0,  
+    hopsuppresstime: 0.0,  
+    maxaccz: 0, 
     
     touchstartfunc: function(event) 
     {
@@ -142,5 +146,33 @@ var PokeUI = {
             PositionObject.SetCameraPositionG(); 
             PositionObject.TrailUpdate(); 
         }
+    }, 
+    
+    devorientationevent: function(event)
+    {
+        if (event.acceleration.z > this.accthresh) {
+            if (event.acceleration.z > this.maxaccz) {
+                this.maxaccz = event.acceleration.z; 
+            }
+        } else if (event.acceleration.z < -this.accthresh) {
+            if (event.acceleration.z < this.maxaccz) {
+                this.maxaccz = event.acceleration.z; 
+            }
+        } else {
+            if ((this.maxaccz > 0.0) && (PositionObject.hopmode == 0)) {
+                if (this.hopsuppresstime > clock.elapsedTime) { 
+                    PositionObject.ZhopGo((this.maxaccz-5.5)*(this.maxaccz-5.5)*300); 
+                    document.getElementById('debugtext').textContent = this.maxaccz.toFixed(3); 
+                }
+            } else if (this.maxaccz < 0.0) {
+                if (PositionObject.hopmode == 2) {
+                    PositionObject.ZhopGo(0); 
+                } else {
+                    this.hopsuppresstime = clock.elapsedTime + 2; 
+                }
+            }
+            this.maxaccz = 0.0; 
+        }
     }
+
 };

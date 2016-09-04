@@ -67,8 +67,8 @@ THREE.DeviceOrientationControls = function(object) {
   this.autoAlign = true;
   this.autoForward = false;
 
-  this.alpha = 0;
-  this.alphaoffset = 0.0;    // added
+  this.alpha = 0.0;
+  this.alphaoffset = 0.0001;    // added (non-zero to prevent mysterious jump when it gets added)
   //this.alphalock = false;  // added  // didn't work.  couldn't see why it was unstable
   this.beta = 0;
   this.gamma = 0;

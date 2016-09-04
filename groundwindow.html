@@ -230,38 +230,6 @@ function quantshowshow(qtext)
 }
 
 
-var accthresh = 6.0; 
-var sumaccz = 0.0; 
-var isumaccz = 0; 
-var hopsuppresstime = 0.0; 
-var maxaccz = 0; 
-function devorientationevent(event)
-{
-    if (event.acceleration.z > accthresh) {
-        if (event.acceleration.z > maxaccz) {
-            maxaccz = event.acceleration.z; 
-        }
-    } else if (event.acceleration.z < -accthresh) {
-        if (event.acceleration.z < maxaccz) {
-            maxaccz = event.acceleration.z; 
-        }
-    } else {
-        if ((maxaccz > 0.0) && (PositionObject.hopmode == 0)) {
-            if (hopsuppresstime > clock.elapsedTime) { 
-                PositionObject.ZhopGo((maxaccz-5.5)*(maxaccz-5.5)*300); 
-                document.getElementById('debugtext').textContent = maxaccz.toFixed(3); 
-            }
-        } else if (maxaccz < 0.0) {
-            if (PositionObject.hopmode == 2) {
-                PositionObject.ZhopGo(0); 
-            } else {
-                hopsuppresstime = clock.elapsedTime + 2; 
-            }
-        }
-        maxaccz = 0.0; 
-    }
-}
-
 
 function init() 
 {
@@ -331,7 +299,7 @@ function init()
     vizcontainer.addEventListener('contextmenu', function(event) { PokeUI.touchholdfunc(event) }, false); 
 
     window.addEventListener('resize', resize);
-    window.addEventListener('devicemotion', devorientationevent, false);
+    window.addEventListener('devicemotion', function(event) { PokeUI.devorientationevent(event) }, false);
 
     setTimeout(resize, 1);
 }

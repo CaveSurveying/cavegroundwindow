@@ -6,7 +6,6 @@ python ../survexprocessing/parse3ddmp.py --js=test.js --svx=test.svx
 
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
-// * ability to offset the alt and latlng in the phone UI
 // * move more code into JS files
 // * convert entrances
 // * add an entrance case
@@ -37,7 +36,6 @@ getting readings in field of 140 from gpsstatus 187 on app   -- always 47m too h
 // * provide an offset and digit rounding to the java file to shorten it
 // * separate makefiles for the svx on loser and on leckfell
 // * other peaks in view into database (put them into the svx files as visible peaks if possible???)
-// * assign date attribute onto legs as a year float
 // * provide option of which cave data to load
 // * make the camera view slightly faded (would require specual shader rather that basicmaterial)
 // * break file into different javascript files
@@ -51,6 +49,8 @@ getting readings in field of 140 from gpsstatus 187 on app   -- always 47m too h
 
 
 // DONE
+// * assign date attribute onto legs as a year float
+// * ability to offset the alt and latlng in the phone UI
 // * dot trail to spawn off the dots from current position
 // * attribute colouring on the slopes using that trick
 // * get aspect ratio of triangles to remain constant when device rotates
