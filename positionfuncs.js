@@ -3,7 +3,15 @@ var PositionObject =
 {
     fakegpsstart: [47.69278936428201, 13.820952855143327, 1877.69],  // this is at 204a entrance
     ifakegpsstart: 0, 
-    bgpserror: false, 
+    
+    geosuccesscount: 0,
+    geoerrorcount: 0, 
+    geosetdirectcount: 0, 
+
+    gslatitude: 0, 
+    gslongitude: 0, 
+    gsaltitude: 0,
+    camera3JSAlt: 0, 
 
     trailgeometry: null, 
     trailgeometryindex: 0, 
@@ -163,26 +171,30 @@ var PositionObject =
     }, 
 
 
-
-    geo_set: function(plongitude, platitude, paltitude, paccuracy, paltitudeaccuracy) 
+    geosetdirect: function(plongitude, platitude, paltitude, paccuracy, paltitudeaccuracy) 
     { 
-        this.bgpserror = false; 
-        latG = platitude; 
-        lngG = plongitude; 
+console.log("geosetdirecttttt", plongitude, platitude, paltitude); 
+        this.gslatitude = platitude; 
+        this.gslongitude = plongitude; 
         if (paltitude !== undefined) 
-            altG = paltitude; 
-        if ((latR === 0) && (altG != 0.0)) {
-            var llmax = Math.max(Math.abs(latG - lat0), Math.abs(lngG - lng0)); 
+            this.gsaltitude = paltitude; 
+
+        if (this.geosetdirectcount == 0) {
+            var llmax = Math.max(Math.abs(svxview.latp0 - this.gslatitude), Math.abs(svxview.lngp0 - this.gslongitude)); 
+            var earthrad = 6378137; 
+            var nyfac = 2*Math.PI*earthrad/360; 
+            var exfac = nyfac*Math.cos(this.gslatitude*Math.PI/180); 
+            svxviewcurrentgps = { latp0: this.gslatitude, lngp0: this.gslongitude, altp0: this.gsaltitude, 
+                                  nyfac: nyfac, nxfac: 0, eyfac: 0, exfac: exfac }; 
             if (llmax > 0.1) {  
-                latR = latG - lat0; 
-                lngR = lngG - lng0; 
-                altR = altG - alt0; 
+                svxview = svxviewcurrentgps; 
                 quantshowshow("Moving GPS origin to the caves d>"+llmax.toFixed(3)+"deg"); 
                 console.log("Moving GPS origin to the caves d>"+llmax+"deg"); 
                 quantshowhidedelay(4500); 
             }
         }
-        
+        this.geosetdirectcount++; 
+
         //document.getElementById('speed').textContent = position.coords.speed.toFixed(2); 
         //document.getElementById('heading').textContent = position.coords.heading.toFixed(0); 
         this.SetCameraPositionG();
@@ -190,59 +202,39 @@ var PositionObject =
     
     SetCameraPositionG: function()
     {
-        var rlat = latG - latR - svx3d.latp0; 
-        var rlng = lngG - lngR - svx3d.lngp0; 
-        var ralt = altG - altR - svx3d.altp0; 
-        var x = rlat*svx3d.eyfac + rlng*svx3d.exfac; 
-        var y = rlat*svx3d.nyfac + rlng*svx3d.nxfac; 
+        var rlat = this.gslatitude - svxview.latp0; 
+        var rlng = this.gslongitude - svxview.lngp0; 
+        var ralt = this.gsaltitude - svxview.altp0; 
+        var x = rlat*svxview.eyfac + rlng*svxview.exfac; 
+        var y = rlat*svxview.nyfac + rlng*svxview.nxfac; 
         var z = ralt; 
+        console.log(x !== NaN); 
         // var x0 = -svx3d.legnodes[i0]*svxscaleInv, y0=svx3d.legnodes[i0+2]*svxscaleInv, z0=svx3d.legnodes[i0+1]*svxscaleInv; 
-        camera3JSAlt = z; 
+        this.camera3JSAlt = z; 
         camera.position.set(-x, z, y); 
         this.TrailUpdate(); 
     }, 
 
-    geosetcount: 0,
     geo_success: function(position) 
     { 
-        this.bgpserror = false; 
+        this.geosuccesscount++; 
         document.getElementById('gpsrec').textContent = "Lat:"+position.coords.latitude.toFixed(7)+" Lng:"+position.coords.longitude.toFixed(7)+
                                                         " (~"+position.coords.accuracy.toFixed(0)+"m)"+
                                                         " Alt:"+position.coords.altitude.toFixed(1)+
                                                         " (~"+position.coords.altitudeAccuracy.toFixed(0)+"m)"; 
         document.getElementById('gpsrecV').textContent = " "+(position.coords.speed|0).toFixed(1)+"m/s "+(position.coords.heading|0).toFixed(1)+"D"; 
-        document.getElementById('testout2').textContent = "#"+(this.geosetcount); 
-
-        // use valley entrance settings calculated as follows from the SVX fix positions
-        // cs = "CS +proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=100000 +y_0=-500000 +ellps=airy +datum=OSGB36 +units=m +no_defs"
-        // proj = pyproj.Proj(cs)
-        // lng, lat = proj(77407.244, 69907.233, inverse=True)
-
-        // There is a consistent displacement in the Firefox GPS position (F0) to the one given by the GPS status in same phone (F0c)
-        // no idea how this gets in, but might be better when using another browser
-        var posF0 = [52.4646548, -2.7956959, 248]; 
-        var posF0c = [52.53606, -2.91357, 200]; 
-        
-        // correction at building where the latlng errors disappeared!
-        posF0 = [52.5335, -2.91404, 263]; 
-        posF0c = [52.53335, -2.91404, 216]; 
+        document.getElementById('testout2').textContent = "#"+(this.geosuccesscount); 
 
         if (this.footvelocitylines) 
-            this.UpdateFootVelocity(position.coords.speed, position.coords.heading  ); 
-
-        var posF0D = [posF0c[0] - posF0[0], posF0c[1] - posF0[1], posF0c[2] - posF0[2]]; 
-        this.geo_set(position.coords.longitude + posF0D[0], position.coords.latitude + posF0D[1], 
-                     (position.coords.altitude != 0 ? position.coords.altitude + posF0D[2] : undefined), 
-                     position.coords.accuracy, position.coords.altitudeAccuracy); 
-        this.geosetcount++; 
+            this.UpdateFootVelocity(position.coords.speed, position.coords.heading); 
+        this.geosetdirect(position.coords.longitude, position.coords.latitude, (position.coords.altitude != 0 ? position.coords.altitude : undefined), position.coords.accuracy, position.coords.altitudeAccuracy); 
     },
     
-    geoerrcount: 0,
     geo_error: function() 
     {
-        this.bgpserror = true; 
+        this.geoerrorcount++; 
         document.getElementById('gpsrec').textContent = "gps errror"; 
-        document.getElementById('testout2').textContent = "#E"+(this.geoerrcount++); 
+        document.getElementById('testout2').textContent = "#E"+(this.geoerrorcount); 
     }
 }
 

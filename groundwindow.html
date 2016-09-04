@@ -59,53 +59,18 @@
 //function getshader(k) { document.getElementById(k).textContent; };
 function getshader(k) { return shaders[k]; };
 
-var svx3d;   // the structure pulled in that is generated from the 
-      
-var basepositionOrigin = [0,0,0,0]; 
-var latR, lngR, altR, latG, lngG, altG; 
-var nyfac, nxfac, eyfac, exfac, lat0, lng0, alt0, camera3JSAlt; 
-
-
-function SetBasePositions()
-{
-    //latG = basepositionOrigin[1]; 
-    //lngG = basepositionOrigin[2]; 
-    //altG = basepositionOrigin[3]; 
-    latG = svx3d.latp0; 
-    lngG = svx3d.lngp0; 
-    altG = svx3d.altp0; 
-
-    latR = 0; 
-    lngR = 0; 
-    altR = 0; 
-    //lat0 = basepositionOrigin[1]; 
-    //lng0 = basepositionOrigin[2]; 
-    //alt0 = basepositionOrigin[3]; 
-    lat0 = svx3d.latp0; 
-    lng0 = svx3d.lngp0; 
-    alt0 = svx3d.altp0; 
-    
-    var earthrad = 6378137; 
-    nyfac = 2*Math.PI*earthrad/360; 
-    nxfac = 0; 
-    eyfac = 0; 
-    exfac = nyfac*Math.cos(lat0*Math.PI/180); 
-    
-    PositionObject.SetCameraPositionG();
-}
+var svx3d;   // current cave survey object
+var svxviewcurrentgps = { latp0:0, lngp0:0, altp0:0, nyfac:111319.49079327358, nxfac:0, eyfac:0, exfac:111319.49079327358 }; // replacement view when too far from svxview position
+var svxview = svxviewcurrentgps; // reset to svx3d if all attributes there
 
 function reset31(event) 
 {
     event.preventDefault(); 
-    if ((latR != 0) && (latR != 0.0000001)) {
-        latR = 0.0000001;   // prevents retrigger of set in geo_set
-        lngR = 0; 
-        altR = 0; 
+    if (svxview === svxviewcurrentgps) {
+        svxview = svx3d; 
         quantshowshow("Moving GPS origin back to reality"); 
     } else {
-        latR = latG - lat0; 
-        lngR = lngG - lng0; 
-        altR = altG - alt0; 
+        svxview = svxviewcurrentgps; 
         quantshowshow("Moving GPS origin to the caves"); 
     }
     PositionObject.SetCameraPositionG(); 
@@ -118,7 +83,7 @@ function HighTopView()
     GdeviceOrientation.gamma = 0.1;   // required for alpha to change position
     GdeviceOrientation.beta = 0; 
     GdeviceOrientation.alpha = -90; 
-    PositionObject.geo_set(lngG, latG, altG + 100, 0, 0);  
+    PositionObject.geosetdirect(PositionObject.gslongitude, PositionObject.gslatitude, PositionObject.gsaltitude + 100, 0, 0);  
 }
 
 var camera, scene, renderer, controls, threejselement, vizcontainer;
@@ -156,12 +121,6 @@ function Zhopdisplacement()
     return hopheight*y; 
 }
 
-function latlngtopt(lat, lng, alt)
-{
-    var rlat = lat - lat0; 
-    var rlng = lng - lng0; 
-    return new THREE.Vector3(-(rlat*eyfac + rlng*exfac), alt, +(rlat*nyfac + rlng*nxfac)); 
-}
 
 
 
@@ -238,7 +197,7 @@ var yeartimestep = 0;
 function animate(t) 
 {
     if (hopmode !== 0)
-        camera.position.y = camera3JSAlt + Zhopdisplacement(); 
+        camera.position.y = PositionObject.camera3JSAlt + Zhopdisplacement(); 
     //$("#camerapos").text("cam:"+camera.position.x.toFixed(1)+" "+camera.position.y.toFixed(1)+" "+camera.position.z.toFixed(1))
     requestAnimationFrame(animate);
     if  ((touchmovestate == 1) && (clock.elapsedTime - touchtime > 1)) {
@@ -431,11 +390,8 @@ function init()
     var neardistance = 5; 
     var fardistance = 70000; 
     camera = new THREE.PerspectiveCamera(fieldofview, aspect, neardistance, fardistance);
-    camera3JSAlt = alt0; 
-    camera.position.set(0, camera3JSAlt, 0); 
+    camera.position.set(0, 0, 0); 
     scene.add(camera); 
-
-    SetBasePositions(); 
 
     controls = new THREE.DeviceOrientationControls(camera, true);
     controls.connect();
@@ -453,8 +409,8 @@ function init()
             if (mv.rz)  GdeviceOrientation.beta += mv.rz*5; 
             if (mv.ry)  GdeviceOrientation.alpha += mv.ry*5; 
         } else if (mv.x || mv.y || mv.z) {
-            PositionObject.geo_set(lngG + (mv.x|0)*keylatlngstep, latG + (mv.z|0)*keylatlngstep, altG + (mv.y|0)*keyaltstep, 0, 0);  
-            document.getElementById('gpsrec').textContent = "FLat:"+latG.toFixed(7)+" Lng:"+lngG.toFixed(7)+" Alt:"+altG.toFixed(1); 
+            PositionObject.geosetdirect(PositionObject.gslongitude + (mv.x|0)*keylatlngstep, PositionObject.gslatitude + (mv.z|0)*keylatlngstep, PositionObject.gsaltitude + (mv.y|0)*keyaltstep, 0, 0);  
+            document.getElementById('gpsrec').textContent = "FLat:"+PositionObject.gslatitude.toFixed(7)+" Lng:"+PositionObject.gslongitude.toFixed(7)+" Alt:"+PositionObject.gsaltitude.toFixed(1); 
        }
     });
 
@@ -506,36 +462,20 @@ function init()
 }
 
 var script = document.createElement('script');
-//script.setAttribute('src', 'maxpleasure2.js');
+script.setAttribute('src', 'maxpleasure2.js');
 //script.setAttribute('src', 'test.js');
-script.setAttribute('src', 'erin2.js');
+//script.setAttribute('src', 'erin2.js');
 script.setAttribute('type', 'text/javascript');
 document.getElementsByTagName('head')[0].appendChild(script);
 
+// callbackgrom the javascript include file above
 function LoadSvx3d(lsvx3d)
 {
     svx3d = lsvx3d; 
-    
-    // must get a better way of disabling this one
-    if (svx3d.latp0 === undefined) {
-        console.log("latp0 missing, setting to 0 to disable"); 
-        svx3d.latp0 = 0; 
-        svx3d.lngp0 = 0; 
-        svx3d.altp0 = 0; 
-    }
-
-    if (svx3d.nyfac === undefined) {
-        var earthrad = 6378137; 
-        svx3d.nyfac = 2*Math.PI*earthrad/360; 
-        svx3d.nxfac = 0; 
-        svx3d.eyfac = 0; 
-        svx3d.exfac = svx3d.nyfac*Math.cos(svx3d.latp0*Math.PI/180); 
-    }
-    
     svx3d.scaleInv = 1.0/svx3d.scale; 
-    latG = svx3d.latp0; 
-    lngG = svx3d.lngp0; 
-    altG = svx3d.altp0; 
+
+    if (svx3d.latp0 !== undefined) 
+        geosetdirect(svx3d.lngp0, svx3d.latp0, svx3d.altp0, 0, 0);  
     
     init();
     animate();

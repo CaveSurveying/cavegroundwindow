@@ -5,8 +5,10 @@ python ../survexprocessing/parse3ddmp.py --js=test.js --svx=test.svx
 
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
-// * light range into passages
-// * light down not so severe in UI
+// * pyproj to set the p1 positions of relative projections
+// * move the latlngG crap to position code and simplify
+// * ability to offset the alt and latlng in the UI
+// * attribute colouring on the slopes using that trick
 // * move more code into JS files
 // * then can make the centreline case use indexes for the linesegments rather than repeat all the nodes
 // * convert entrances

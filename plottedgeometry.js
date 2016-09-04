@@ -132,8 +132,6 @@ var PlotGeometryObject =
             var x0 = -legnodes[i0]*svxscaleInv, y0=legnodes[i0+2]*svxscaleInv, z0=legnodes[i0+1]*svxscaleInv; 
             var x1 = -legnodes[i1]*svxscaleInv, y1=legnodes[i1+2]*svxscaleInv, z1=legnodes[i1+1]*svxscaleInv; 
             
-            //var p0 = latlngtopt(svxleg[0], svxleg[1], svxleg[2]); 
-            //var p1 = latlngtopt(svxleg[3], svxleg[4], svxleg[5]); 
             centrelinepositionsbuff.setXYZ(i*2, x0, y0, z0); 
             centrelinepositionsbuff.setXYZ(i*2+1, x1, y1, z1); 
             var dx = x1 - x0, dy = y1 - y0, dz = z1 - z0; 
@@ -205,7 +203,9 @@ var PlotGeometryObject =
 
         this.entlabelscard = new THREE.Object3D();
         for (var i = 0; i < svxents.length; i++) {
-            var p = latlngtopt(svxents[i][1], svxents[i][2], svxents[i][3]); 
+            //var p = latlngtopt(svxents[i][1], svxents[i][2], svxents[i][3]); 
+            var x1 = -svxents[i][1]*svxscaleInv, y1=svxents[i][3]*svxscaleInv, z1=svxents[i][2]*svxscaleInv; // not checked
+            var p = {x:x1, y:y1, z:z1}; 
             entpositionbuff.setXYZ(i*3, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+1, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+2, p.x, p.y, p.z); 
             entcorner[i*3] = 0.0;  entcorner[i*3+1] = 1.0;  entcorner[i*3+2] = 2.0; 
             svxcaveindex[i*3] = svxents[i][4];  svxcaveindex[i*3+1] = svxents[i][4];  svxcaveindex[i*3+2] = svxents[i][4]; 
