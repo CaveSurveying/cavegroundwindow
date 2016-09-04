@@ -45,13 +45,16 @@ X  E 40      45     20
 X 3 1 2 0
 E 4 1 3 0
 
-*fix cordonhill reference 30500 96953 513
-*equate cordonhill landmark_cordon_hill   ; name landmark signifies it to be a mountain top
+*cs LONG-LAT 
+*fix husse reference 0.852484 42.987308 1280
+*equate husse landmark_husse   ; name landmark signifies it to be a mountain top
 
-*fix north5 reference 38000 98000 180
-*fix south5 reference 38000 88000 180
-*fix east5 reference 43000 93000 180
-*fix west5 reference 33000 93000 180
+*flags surface
+*data normal from to tape compass clino
+X north5 20000 0 0
+X south5 20000 180 0
+X east5 20000 90 0
+X west5 20000 270 0
 *equate north5 landmark_north5
 *equate south5 landmark_south5
 *equate east5 landmark_east5

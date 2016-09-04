@@ -361,8 +361,8 @@ function init()
     controls.connect();
     controls.update();
 
-    var keyhorizstep = 2.0; 
-    var keyaltstep = 1.0; 
+    var keyhorizstep = 20.0; 
+    var keyaltstep = 10.0; 
     window.addEventListener('keydown', function(event) { 
         var mv = { }; 
         if (event.keyCode == 37)       mv[event.shiftKey ? "x" : "rx"] = -1;   // left cursor
@@ -432,8 +432,8 @@ function init()
 
 var script = document.createElement('script');
 //script.setAttribute('src', 'maxpleasure2.js');
-//script.setAttribute('src', 'test.js');
-script.setAttribute('src', 'erin2.js');
+script.setAttribute('src', 'test.js');
+//script.setAttribute('src', 'erin2.js');
 script.setAttribute('type', 'text/javascript');
 document.getElementsByTagName('head')[0].appendChild(script);
 
