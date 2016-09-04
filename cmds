@@ -3,10 +3,13 @@ http://tinyurl.com/jzjxvmu  is http://goatchurchprime.github.io/cardboardlike/gr
 dump3d maxpleasure2.3d | ../survexprocessing/parse3ddmp.py -s --js=maxpleasure2.js 
 python ../survexprocessing/parse3ddmp.py --js=test.js --svx=test.svx
 
+
+
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
+// * use the fakegps coords to make work with the displacement
+
 // * pyproj to set the p1 positions of relative projections
-// * move the latlngG crap to position code and simplify
 // * ability to offset the alt and latlng in the UI
 // * attribute colouring on the slopes using that trick
 // * move more code into JS files
@@ -18,7 +21,6 @@ adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 // * relative to main cave loading thing
 
 // * unhosted.org
-// * make the test.js case work
 
 // * do Philip's conversion stuff
 // * conversion code to note multiple node names for a node
@@ -55,7 +57,11 @@ getting readings in field of 140 from gpsstatus 187 on app   -- always 47m too h
 // * set up links to caves
 
 
-// done
+// DONE
+// * make the test.js case work
+// * move the latlngG crap to position code and simplify
+// * and then one working on the test.js one
+// * check with case that has a latlng valid latlng in it
 // * convert *fix type mountains (like the entrances)
 // * shift the makecentrelines and entrances into the plottedgeometry.js file
 // * dot tracking changed to vertical lines from sea level

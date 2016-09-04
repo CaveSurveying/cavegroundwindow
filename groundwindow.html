@@ -59,14 +59,14 @@
 //function getshader(k) { document.getElementById(k).textContent; };
 function getshader(k) { return shaders[k]; };
 
-var svx3d;   // current cave survey object
+var svx3d = undefined;   // current cave survey object
 var svxviewcurrentgps = { latp0:0, lngp0:0, altp0:0, nyfac:111319.49079327358, nxfac:0, eyfac:0, exfac:111319.49079327358 }; // replacement view when too far from svxview position
-var svxview = svxviewcurrentgps; // reset to svx3d if all attributes there
+var svxview = svxviewcurrentgps; // reset to svx3d if all attributes there; svxviewcurrentgps also rewritten if gps reading comes through so we can project into local space
 
 function reset31(event) 
 {
     event.preventDefault(); 
-    if (svxview === svxviewcurrentgps) {
+    if (svxview !== svx3d) {
         svxview = svx3d; 
         quantshowshow("Moving GPS origin back to reality"); 
     } else {
@@ -462,8 +462,8 @@ function init()
 }
 
 var script = document.createElement('script');
-script.setAttribute('src', 'maxpleasure2.js');
-//script.setAttribute('src', 'test.js');
+//script.setAttribute('src', 'maxpleasure2.js');
+script.setAttribute('src', 'test.js');
 //script.setAttribute('src', 'erin2.js');
 script.setAttribute('type', 'text/javascript');
 document.getElementsByTagName('head')[0].appendChild(script);
@@ -474,19 +474,21 @@ function LoadSvx3d(lsvx3d)
     svx3d = lsvx3d; 
     svx3d.scaleInv = 1.0/svx3d.scale; 
 
-    if (svx3d.latp0 !== undefined) 
-        geosetdirect(svx3d.lngp0, svx3d.latp0, svx3d.altp0, 0, 0);  
-    
     init();
+    if (svx3d.latp0 !== undefined) {
+        svxview = svx3d; 
+        PositionObject.geosetdirect(svx3d.lngp0, svx3d.latp0, svx3d.altp0, 0, 0);  
+    }
+    
     animate();
 }
 
 
 // add GPS reader to this or do fake positions
 // [must put anonymous functions in here to get this=obect rather than PositionObject.geo_success pointer directly which gets this=Window]
-var watchID = navigator.geolocation.watchPosition(function(p) { PositionObject.geo_success(p); }, function() { PositionObject.geo_error(); }, {enableHighAccuracy:true, timeout:17000, maximumAge:20000}); 
+//var watchID = navigator.geolocation.watchPosition(function(p) { PositionObject.geo_success(p); }, function() { PositionObject.geo_error(); }, {enableHighAccuracy:true, timeout:17000, maximumAge:20000}); 
 //navigator.geolocation.watchPosition(function(p) { document.getElementById('testout2').textContent = p.coords.altitude; }, function() { document.getElementById('testout2').textContent = "E"; }, {enableHighAccuracy:true, timeout:27000, maximumAge:30000}); 
-//fakegpsgenerator(); // for desktop use
+fakegpsgenerator(); // for desktop use
 
   </script>
   </body>

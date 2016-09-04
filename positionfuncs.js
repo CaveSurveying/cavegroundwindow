@@ -1,10 +1,8 @@
 
 var PositionObject = 
 {
-    fakegpsstart: [47.69278936428201, 13.820952855143327, 1877.69],  // this is at 204a entrance
-    ifakegpsstart: 0, 
-    
     geosuccesscount: 0,
+    geosuccesscountpostsvx: 0,
     geoerrorcount: 0, 
     geosetdirectcount: 0, 
 
@@ -23,23 +21,6 @@ var PositionObject =
 
     footvelocitybuff: null, 
     footvelocitylines: null, 
-
-    fakegpsgenerator: function()
-    {
-        var ioffs = 100, ifac = 1.0/600; 
-        var i = ioffs; 
-        var x0 = Math.cos(i*ifac)*i*0.00001; 
-        var y0 = -Math.sin(i*ifac)*i*0.00001; 
-
-        i = ioffs + ifakegpsstart; 
-        var x = Math.cos(i*ifac)*i*0.00001; 
-        var y = -Math.sin(i*ifac)*i*0.00001; 
-        
-        this.geo_success({ coords: { latitude: this.fakegpsstart[0] + x - x0, longitude: this.fakegpsstart[1] + y - y0, accuracy: i*0.01, altitudeAccuracy: i*0.01+1, altitude: ((i % 31) != 6 ? this.fakegpsstart[2] : 0.0) }}); 
-        this.ifakegpsstart++; 
-        if (this.ifakegpsstart < 100)
-            setTimeout(this.fakegpsgenerator, 1000); 
-    }, 
 
     LoadTrailRods: function(scene)
     {
@@ -173,26 +154,11 @@ var PositionObject =
 
     geosetdirect: function(plongitude, platitude, paltitude, paccuracy, paltitudeaccuracy) 
     { 
-console.log("geosetdirecttttt", plongitude, platitude, paltitude); 
         this.gslatitude = platitude; 
         this.gslongitude = plongitude; 
         if (paltitude !== undefined) 
             this.gsaltitude = paltitude; 
 
-        if (this.geosetdirectcount == 0) {
-            var llmax = Math.max(Math.abs(svxview.latp0 - this.gslatitude), Math.abs(svxview.lngp0 - this.gslongitude)); 
-            var earthrad = 6378137; 
-            var nyfac = 2*Math.PI*earthrad/360; 
-            var exfac = nyfac*Math.cos(this.gslatitude*Math.PI/180); 
-            svxviewcurrentgps = { latp0: this.gslatitude, lngp0: this.gslongitude, altp0: this.gsaltitude, 
-                                  nyfac: nyfac, nxfac: 0, eyfac: 0, exfac: exfac }; 
-            if (llmax > 0.1) {  
-                svxview = svxviewcurrentgps; 
-                quantshowshow("Moving GPS origin to the caves d>"+llmax.toFixed(3)+"deg"); 
-                console.log("Moving GPS origin to the caves d>"+llmax+"deg"); 
-                quantshowhidedelay(4500); 
-            }
-        }
         this.geosetdirectcount++; 
 
         //document.getElementById('speed').textContent = position.coords.speed.toFixed(2); 
@@ -208,22 +174,51 @@ console.log("geosetdirecttttt", plongitude, platitude, paltitude);
         var x = rlat*svxview.eyfac + rlng*svxview.exfac; 
         var y = rlat*svxview.nyfac + rlng*svxview.nxfac; 
         var z = ralt; 
-        console.log(x !== NaN); 
+        console.assert((x !== undefined) && (x !== NaN)); 
         // var x0 = -svx3d.legnodes[i0]*svxscaleInv, y0=svx3d.legnodes[i0+2]*svxscaleInv, z0=svx3d.legnodes[i0+1]*svxscaleInv; 
         this.camera3JSAlt = z; 
-        camera.position.set(-x, z, y); 
+        if (camera !== undefined) 
+            camera.position.set(-x, z, y); 
         this.TrailUpdate(); 
     }, 
 
     geo_success: function(position) 
     { 
+        if (this.geosuccesscount == 0) {
+            var earthrad = 6378137; 
+            var nyfac = 2*Math.PI*earthrad/360; 
+            var exfac = nyfac*Math.cos(this.gslatitude*Math.PI/180); 
+            svxviewcurrentgps = { latp0: position.coords.latitude, lngp0: position.coords.longitude, altp0: position.coords.altitude, 
+                                  nyfac: nyfac, nxfac: 0, eyfac: 0, exfac: exfac }; 
+        }
         this.geosuccesscount++; 
+        
+        if (svx3d !== undefined) {
+            if (this.geosuccesscountpostsvx == 0) {
+                var llmax = Math.max(Math.abs(svxview.latp0 - position.coords.latitude), Math.abs(svxview.lngp0 - position.coords.longitude)); 
+                var rlat = position.coords.latitude - svxview.latp0; 
+                var rlng = position.coords.longitude - svxview.lngp0; 
+                var dx = rlat*svxview.eyfac + rlng*svxview.exfac; 
+                var dy = rlat*svxview.nyfac + rlng*svxview.nxfac; 
+                var distcave = Math.sqrt(dx*dx + dy*dy)/1000; 
+                console.log("distcavedistcave", distcave); 
+                if (distcave > 20) {  
+                    svxview = svxviewcurrentgps; 
+                    quantshowshow("Moving GPS origin to the caves as dist="+distcave.toFixed(3)+"km>20km"); 
+                    console.log("Moving GPS origin to the caves as dist="+distcave.toFixed(3)+"km>20km"); 
+                    quantshowhidedelay(4500); 
+                }
+            }
+            this.geosuccesscountpostsvx++; 
+        }
+        
         document.getElementById('gpsrec').textContent = "Lat:"+position.coords.latitude.toFixed(7)+" Lng:"+position.coords.longitude.toFixed(7)+
                                                         " (~"+position.coords.accuracy.toFixed(0)+"m)"+
                                                         " Alt:"+position.coords.altitude.toFixed(1)+
                                                         " (~"+position.coords.altitudeAccuracy.toFixed(0)+"m)"; 
         document.getElementById('gpsrecV').textContent = " "+(position.coords.speed|0).toFixed(1)+"m/s "+(position.coords.heading|0).toFixed(1)+"D"; 
         document.getElementById('testout2').textContent = "#"+(this.geosuccesscount); 
+
 
         if (this.footvelocitylines) 
             this.UpdateFootVelocity(position.coords.speed, position.coords.heading); 
@@ -238,4 +233,22 @@ console.log("geosetdirecttttt", plongitude, platitude, paltitude);
     }
 }
 
+
+var ifakegpsstart = 0, fakegpslongitude = 0.823994+0.1, fakegpslatitude = 43.033223, fakegpsaltitude = 200;  
+function fakegpsgenerator()
+{
+    var ioffs = 30, ifac = 1.0/6; 
+    var i = ioffs; 
+    var x0 = Math.cos(i*ifac)*i*0.00001; 
+    var y0 = -Math.sin(i*ifac)*i*0.00001; 
+
+    i = ioffs + ifakegpsstart; 
+    var x = Math.cos(i*ifac)*i*0.00001; 
+    var y = -Math.sin(i*ifac)*i*0.00001; 
+    
+    PositionObject.geo_success({ coords: { latitude: fakegpslatitude + x - x0, longitude: fakegpslongitude + y - y0, accuracy: i*0.01, altitudeAccuracy: i*0.01+1, altitude: ((i % 31) != 6 ? fakegpsaltitude : 0.0) }}); 
+    ifakegpsstart++; 
+    if (ifakegpsstart < 100)
+        setTimeout(fakegpsgenerator, 100); 
+} 
 
