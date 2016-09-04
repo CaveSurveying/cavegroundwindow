@@ -196,9 +196,7 @@ function render(dt)
 var yeartimestep = 0; 
 function animate(t) 
 {
-    if (hopmode !== 0)
-        camera.position.y = PositionObject.camera3JSAlt + Zhopdisplacement(); 
-    //$("#camerapos").text("cam:"+camera.position.x.toFixed(1)+" "+camera.position.y.toFixed(1)+" "+camera.position.z.toFixed(1))
+    PositionObject.SetCameraPositionG(); // mainly to get the hop value
     requestAnimationFrame(animate);
     if  ((touchmovestate == 1) && (clock.elapsedTime - touchtime > 1)) {
         touchmovestate = 5; 
@@ -371,8 +369,6 @@ function devorientationevent(event)
 }
 
 
-var keylatlngstep = 0.0003; 
-var keyaltstep = 10.0; 
 function init() 
 {
     renderer = new THREE.WebGLRenderer();
@@ -396,21 +392,27 @@ function init()
     controls = new THREE.DeviceOrientationControls(camera, true);
     controls.connect();
     controls.update();
+
+    var keyhorizstep = 2.0; 
+    var keyaltstep = 1.0; 
     window.addEventListener('keydown', function(event) { 
         var mv = { }; 
         if (event.keyCode == 37)       mv[event.shiftKey ? "x" : "rx"] = -1;   // left cursor
         else if (event.keyCode == 39)  mv[event.shiftKey ? "x" : "rx"] = 1;    // right cursor
-        else if (event.keyCode == 38)  mv[event.shiftKey ? "z" : "rz"] = 1;    // up cursor
-        else if (event.keyCode == 40)  mv[event.shiftKey ? "z" : "rz"] = -1;   // down cursor
-        else if (event.keyCode == 33)  mv[event.shiftKey ? "y" : "ry"] = 1;    // page up
-        else if (event.keyCode == 34)  mv[event.shiftKey ? "y" : "ry"] = -1;   // page down
+        else if (event.keyCode == 38)  mv[event.shiftKey ? "y" : "ry"] = 1;    // up cursor
+        else if (event.keyCode == 40)  mv[event.shiftKey ? "y" : "ry"] = -1;   // down cursor
+        else if (event.keyCode == 33)  mv[event.shiftKey ? "z" : "rz"] = 1;    // page up
+        else if (event.keyCode == 34)  mv[event.shiftKey ? "z" : "rz"] = -1;   // page down
         if (mv.rx || mv.ry || mv.rz)  {
             if (mv.rx)  GdeviceOrientation.gamma += mv.rx*5; 
-            if (mv.rz)  GdeviceOrientation.beta += mv.rz*5; 
-            if (mv.ry)  GdeviceOrientation.alpha += mv.ry*5; 
+            if (mv.rz)  GdeviceOrientation.beta += mv.ry*5; 
+            if (mv.ry)  GdeviceOrientation.alpha += mv.rz*5; 
         } else if (mv.x || mv.y || mv.z) {
-            PositionObject.geosetdirect(PositionObject.gslongitude + (mv.x|0)*keylatlngstep, PositionObject.gslatitude + (mv.z|0)*keylatlngstep, PositionObject.gsaltitude + (mv.y|0)*keyaltstep, 0, 0);  
-            document.getElementById('gpsrec').textContent = "FLat:"+PositionObject.gslatitude.toFixed(7)+" Lng:"+PositionObject.gslongitude.toFixed(7)+" Alt:"+PositionObject.gsaltitude.toFixed(1); 
+            PositionObject.gsmdisplacementx += (mv.x|0)*keyhorizstep; 
+            PositionObject.gsmdisplacementy += (mv.y|0)*keyhorizstep; 
+            PositionObject.gsmdisplacementz += (mv.z|0)*keyaltstep; 
+            PositionObject.SetCameraPositionG(); 
+            PositionObject.TrailUpdate(); 
        }
     });
 
@@ -486,8 +488,7 @@ function LoadSvx3d(lsvx3d)
 
 // add GPS reader to this or do fake positions
 // [must put anonymous functions in here to get this=obect rather than PositionObject.geo_success pointer directly which gets this=Window]
-//var watchID = navigator.geolocation.watchPosition(function(p) { PositionObject.geo_success(p); }, function() { PositionObject.geo_error(); }, {enableHighAccuracy:true, timeout:17000, maximumAge:20000}); 
-//navigator.geolocation.watchPosition(function(p) { document.getElementById('testout2').textContent = p.coords.altitude; }, function() { document.getElementById('testout2').textContent = "E"; }, {enableHighAccuracy:true, timeout:27000, maximumAge:30000}); 
+//var watchID = navigator.geolocation.watchPosition(function(p) { PositionObject.geo_success(p); }, function() { PositionObject.geo_error(); }, { enableHighAccuracy:true, timeout:17000, maximumAge:20000 }); 
 fakegpsgenerator(); // for desktop use
 
   </script>

@@ -7,7 +7,6 @@ python ../survexprocessing/parse3ddmp.py --js=test.js --svx=test.svx
 
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
-// * use the fakegps coords to make work with the displacement
 
 // * pyproj to set the p1 positions of relative projections
 // * ability to offset the alt and latlng in the UI
@@ -58,6 +57,7 @@ getting readings in field of 140 from gpsstatus 187 on app   -- always 47m too h
 
 
 // DONE
+// * use the fakegps coords to make work with the displacement
 // * make the test.js case work
 // * move the latlngG crap to position code and simplify
 // * and then one working on the test.js one

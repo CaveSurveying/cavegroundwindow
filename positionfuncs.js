@@ -9,13 +9,17 @@ var PositionObject =
     gslatitude: 0, 
     gslongitude: 0, 
     gsaltitude: 0,
-    camera3JSAlt: 0, 
+    
+    gsmdisplacementx: 0,
+    gsmdisplacementy: 0, 
+    gsmdisplacementz: 0, 
 
     trailgeometry: null, 
     trailgeometryindex: 0, 
     footminusalt: 20, 
     trailpoints: null, 
 
+    cameraactualposition: new THREE.Vector3(0,0,0), // pre-hop value applied
     footposmesh: null, 
     pickposmesh: null, 
 
@@ -27,8 +31,8 @@ var PositionObject =
         this.trailrodsbuff = new THREE.Geometry(); 
         this.trailrodsbuffindex = 0; 
         for (var i = 0; i < 50; i++) {
-            this.trailrodsbuff.vertices.push(new THREE.Vector3(camera.position.x, 0, camera.position.z)); 
-            this.trailrodsbuff.vertices.push(new THREE.Vector3(camera.position.x, camera.position.y, camera.position.z)); 
+            this.trailrodsbuff.vertices.push(new THREE.Vector3(this.cameraactualposition.x, 0, this.cameraactualposition.z)); 
+            this.trailrodsbuff.vertices.push(new THREE.Vector3(this.cameraactualposition.x, this.cameraactualposition.y, this.cameraactualposition.z)); 
         }
         var trailrodsmaterial = new THREE.LineDashedMaterial({ color: 0x555555, linewidth: 2, gapSize:20 }); 
         this.trailrods = new THREE.LineSegments(this.trailrodsbuff, trailrodsmaterial); 
@@ -39,7 +43,7 @@ var PositionObject =
     {
         this.trailgeometry = new THREE.Geometry();
         //var p = latlngtopt(svxents[i][1], svxents[i][2], svxents[i][3]); 
-        var p = new THREE.Vector3(camera.position.x, camera.position.y - this.footminusalt, camera.position.z); 
+        var p = new THREE.Vector3(this.cameraactualposition.x, this.cameraactualposition.y - this.footminusalt, this.cameraactualposition.z); 
         for (var i = 0; i < 50; i++)
             this.trailgeometry.vertices.push(new THREE.Vector3(p.x, p.y, p.z)); 
         this.trailpointsmaterial = new THREE.PointsMaterial({ color: 0x22FF11, sizeAttenuation: false, size: 5.0 }); 
@@ -54,7 +58,7 @@ var PositionObject =
         var trailgeometry = this.trailgeometry; 
         if (trailgeometry) {
             var pp = trailgeometry.vertices[this.trailgeometryindex % trailgeometry.vertices.length]; 
-            var pc = camera.position; 
+            var pc = this.cameraactualposition; 
             if (Math.max(Math.abs(pp.x - pc.x), Math.abs(pp.z - pc.z)) >= trailstep) {
                 this.trailgeometryindex++; 
                 trailgeometry.vertices[this.trailgeometryindex % trailgeometry.vertices.length].set(pc.x, pc.y - this.footminusalt, pc.z); 
@@ -68,7 +72,7 @@ var PositionObject =
         var trailrodsbuff = this.trailrodsbuff; 
         if (trailrodsbuff) {
             var pp = trailrodsbuff.vertices[this.trailrodsbuffindex % (trailrodsbuff.vertices.length/2)]; 
-            var pc = camera.position; 
+            var pc = this.cameraactualposition; 
             if (Math.max(Math.abs(pp.x - pc.x), Math.abs(pp.z - pc.z)) >= trailstep) {
                 this.trailrodsbuffindex++; 
                 var i = this.trailrodsbuffindex % (trailrodsbuff.vertices.length/2); 
@@ -82,9 +86,9 @@ var PositionObject =
         }
         
         if (this.footposmesh) 
-            this.footposmesh.position.set(camera.position.x, camera.position.y - this.footminusalt, camera.position.z); 
+            this.footposmesh.position.set(this.cameraactualposition.x, this.cameraactualposition.y - this.footminusalt, this.cameraactualposition.z); 
         if (this.footvelocitylines)
-            this.footvelocitylines.position.set(camera.position.x, camera.position.y - this.footminusalt, camera.position.z); 
+            this.footvelocitylines.position.set(this.cameraactualposition.x, this.cameraactualposition.y - this.footminusalt, this.cameraactualposition.z); 
     }, 
 
     UpdateFootVelocity: function(speed, heading)
@@ -158,12 +162,9 @@ var PositionObject =
         this.gslongitude = plongitude; 
         if (paltitude !== undefined) 
             this.gsaltitude = paltitude; 
-
         this.geosetdirectcount++; 
-
-        //document.getElementById('speed').textContent = position.coords.speed.toFixed(2); 
-        //document.getElementById('heading').textContent = position.coords.heading.toFixed(0); 
         this.SetCameraPositionG();
+        this.TrailUpdate(); 
     }, 
     
     SetCameraPositionG: function()
@@ -175,11 +176,9 @@ var PositionObject =
         var y = rlat*svxview.nyfac + rlng*svxview.nxfac; 
         var z = ralt; 
         console.assert((x !== undefined) && (x !== NaN)); 
-        // var x0 = -svx3d.legnodes[i0]*svxscaleInv, y0=svx3d.legnodes[i0+2]*svxscaleInv, z0=svx3d.legnodes[i0+1]*svxscaleInv; 
-        this.camera3JSAlt = z; 
+        this.cameraactualposition.set(-(x+this.gsmdisplacementx), (z+this.gsmdisplacementz), (y+this.gsmdisplacementy)); 
         if (camera !== undefined) 
-            camera.position.set(-x, z, y); 
-        this.TrailUpdate(); 
+            camera.position.set(this.cameraactualposition.x, this.cameraactualposition.y+Zhopdisplacement(), this.cameraactualposition.z); 
     }, 
 
     geo_success: function(position) 
@@ -234,7 +233,7 @@ var PositionObject =
 }
 
 
-var ifakegpsstart = 0, fakegpslongitude = 0.823994+0.1, fakegpslatitude = 43.033223, fakegpsaltitude = 200;  
+var ifakegpsstart = 0, fakegpslongitude = 0.823994+0.001, fakegpslatitude = 43.033223, fakegpsaltitude = 200;  
 function fakegpsgenerator()
 {
     var ioffs = 30, ifac = 1.0/6; 
