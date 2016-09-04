@@ -104,9 +104,11 @@ var PokeUI = {
             } else if (touchmovestateN == 3) {
                 PositionObject.gsmdisplacementy = this.stgsmdisplacementy + touchmovedistance*0.1; 
             } else if (touchmovestateN == 4) {
-                PositionObject.gsmdisplacementz = this.stgsmdisplacementz + touchmovedistance*0.1; 
+                PositionObject.gsmdisplacementz = this.stgsmdisplacementz - touchmovedistance*0.1; 
             }
             if ((touchmovestateN >= 2) && (touchmovestateN <= 4)) {
+                PositionObject.SetCameraPositionG(); 
+                PositionObject.TrailUpdate(); 
                 quantshowtextelement.textContent = "gsm x:"+PositionObject.gsmdisplacementx.toFixed(0)+"m y:"+PositionObject.gsmdisplacementy.toFixed(0)+"m z"+PositionObject.gsmdisplacementz.toFixed(0)+"m"; 
             }
         }
