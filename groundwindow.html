@@ -89,39 +89,7 @@ function HighTopView()
 var camera, scene, renderer, controls, threejselement, vizcontainer;
 var quantshowelement, quantshowtextelement, postextelement; 
 var clock = new THREE.Clock();
-var hoptime = null; 
-var hopmode = 0; // 0 on ground, 1 going up, -1 going down, 2 on the up
 var linewidth = 3; 
-var hopheight = 1500.0; 
-function ZhopGo(lhopheight) 
-{
-    if (hopmode == 0)
-        hopheight = lhopheight; 
-    hopmode = (hopmode == 0 ? 1 : -1); 
-    hoptime = clock.elapsedTime; 
-}
-function Zhopdisplacement() 
-{
-    if (hopmode === 0)
-        return 0.0; 
-    if (hopmode === 2)
-        return hopheight; 
-    if (hoptime === null)
-        return 0.0; 
-    var hsecs = clock.elapsedTime - hoptime; 
-    if (hsecs > 2) {
-        hoptime = null; 
-        hopmode = (hopmode == 1 ? 2 : 0); 
-        return (hopmode === 2 ? hopheight : 0); 
-    }
-    var x = Math.abs((hsecs-2)/2); 
-    if (hopmode == -1)
-        x = 1 - x; 
-    var y = (x < 0.5 ? (1 - x*x*2) : (1 - x)*(1 - x)*2); 
-    return hopheight*y; 
-}
-
-
 
 
 
@@ -352,14 +320,14 @@ function devorientationevent(event)
             maxaccz = event.acceleration.z; 
         }
     } else {
-        if ((maxaccz > 0.0) && (hopmode == 0)) {
+        if ((maxaccz > 0.0) && (PositionObject.hopmode == 0)) {
             if (hopsuppresstime > clock.elapsedTime) { 
-                ZhopGo((maxaccz-5.5)*(maxaccz-5.5)*300); 
+                PositionObject.ZhopGo((maxaccz-5.5)*(maxaccz-5.5)*300); 
                 document.getElementById('debugtext').textContent = maxaccz.toFixed(3); 
             }
         } else if (maxaccz < 0.0) {
-            if (hopmode == 2) {
-                ZhopGo(0); 
+            if (PositionObject.hopmode == 2) {
+                PositionObject.ZhopGo(0); 
             } else {
                 hopsuppresstime = clock.elapsedTime + 2; 
             }
@@ -437,7 +405,7 @@ function init()
     
     scene.fog = new THREE.Fog(0x202020, 10, 20000);  // near and far
         
-    document.getElementById("camerahop").addEventListener("click", function() { ZhopGo(1500); }); 
+    document.getElementById("camerahop").addEventListener("click", function() { PositionObject.ZhopGo(1500); }); 
     document.getElementById("reset31").addEventListener("click", reset31); 
     document.getElementById("camera").addEventListener("click", LoadVideoBackground); 
     document.getElementById("magorientset").addEventListener("click", function(event) { event.preventDefault(); window.addEventListener('absolutedeviceorientation', tryabsoluteorient); }); 

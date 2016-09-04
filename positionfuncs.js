@@ -26,6 +26,10 @@ var PositionObject =
     footvelocitybuff: null, 
     footvelocitylines: null, 
 
+    hopheight: 0.0, 
+    hoptime: null, 
+    hopmode: 0, // 0 on ground, 1 going up, -1 going down, 2 on the up
+
     LoadTrailRods: function(scene)
     {
         this.trailrodsbuff = new THREE.Geometry(); 
@@ -156,6 +160,36 @@ var PositionObject =
     }, 
 
 
+    ZhopGo: function(lhopheight) 
+    {
+        if (this.hopmode == 0)
+            this.hopheight = lhopheight; 
+        this.hopmode = (this.hopmode == 0 ? 1 : -1); 
+        this.hoptime = clock.elapsedTime; 
+    }, 
+
+    Zhopdisplacement: function() 
+    {
+        if (this.hopmode === 0)
+            return 0.0; 
+        if (this.hopmode === 2)
+            return this.hopheight; 
+        if (this.hoptime === null)
+            return 0.0; 
+        var hsecs = clock.elapsedTime - this.hoptime; 
+        if (hsecs > 2) {
+            this.hoptime = null; 
+            this.hopmode = (this.hopmode == 1 ? 2 : 0); 
+            return (this.hopmode === 2 ? this.hopheight : 0); 
+        }
+        var x = Math.abs((hsecs-2)/2); 
+        if (this.hopmode == -1)
+            x = 1 - x; 
+        var y = (x < 0.5 ? (1 - x*x*2) : (1 - x)*(1 - x)*2); 
+        return this.hopheight*y; 
+    },
+
+
     geosetdirect: function(plongitude, platitude, paltitude, paccuracy, paltitudeaccuracy) 
     { 
         this.gslatitude = platitude; 
@@ -178,7 +212,7 @@ var PositionObject =
         console.assert((x !== undefined) && (x !== NaN)); 
         this.cameraactualposition.set(-(x+this.gsmdisplacementx), (z+this.gsmdisplacementz), (y+this.gsmdisplacementy)); 
         if (camera !== undefined) 
-            camera.position.set(this.cameraactualposition.x, this.cameraactualposition.y+Zhopdisplacement(), this.cameraactualposition.z); 
+            camera.position.set(this.cameraactualposition.x, this.cameraactualposition.y+this.Zhopdisplacement(), this.cameraactualposition.z); 
     }, 
 
     geo_success: function(position) 
