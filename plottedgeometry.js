@@ -16,6 +16,7 @@ var PlotGeometryObject =
     altmaxF: 0, 
     vfac:0.003972, 
     redalt: 0.894682,
+    lightvx: 0.2, lightvy: 0.1, lightvz: Math.sqrt(1 - (0.2*0.2 + 0.1*0.1)), 
 
     enttrianglematerial: null,
     entgeometry: null, 
@@ -109,7 +110,7 @@ var PlotGeometryObject =
         this.centrelinematerial = new THREE.ShaderMaterial({
             uniforms: { closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
                         closedist: { type: 'f', value: 5.0 }, 
-                        yeartime: { type: 'f', value: 9999.0 },
+                        yeartime: { type: 'f', value: 9999.0 }, 
                         selectedvsvxcaveindex: { type: 'f', value: -1.0 }, 
                         redalt: { type: 'f', value: this.redalt },
                         vfac: { type: 'f', value: this.vfac } 
@@ -234,36 +235,55 @@ var PlotGeometryObject =
             wireframe: false, 
             depthWrite:true, depthTest:true 
         });
+        
         var nnodes = xcs.length/3; 
+        var flatfaceattributes = new Float32Array(nnodes*4); 
         var ssgvertbuff = new THREE.Float32Attribute(new Float32Array(nnodes*3), 3); 
         for (var i = 0; i < nnodes; i++) {
-            var x0 = -xcs[i*3]*svxscaleInv, y0=xcs[i*3+2]*svxscaleInv, z0=xcs[i*3+1]*svxscaleInv; 
-            ssgvertbuff.setXYZ(i, x0, y0, z0); 
+            ssgvertbuff.setXYZ(i, -xcs[i*3]*svxscaleInv, xcs[i*3+2]*svxscaleInv, xcs[i*3+1]*svxscaleInv); 
         }
+        
         var ntris = (4*nxcs - 2*passagexcsseq.length)*2; // 4 quads between pairs of xcs plus endcaps
         var indices = new Uint16Array(ntris*3); 
         
         var iquad = 0; 
-        var AddQuad = function(q0, q1, q2, q3) {
+        var AddQuad = function(q0, q1, q2, q3, iflat) {
             indices[iquad*6] = q0; 
             indices[iquad*6+1] = q2; 
             indices[iquad*6+2] = q1; 
             indices[iquad*6+3] = q0; 
             indices[iquad*6+4] = q3; 
             indices[iquad*6+5] = q2; 
+            if (iflat != 0) {
+                var ax = ssgvertbuff.getX(q1) - ssgvertbuff.getX(q0), ay = ssgvertbuff.getY(q1) - ssgvertbuff.getY(q0), az = ssgvertbuff.getZ(q1) - ssgvertbuff.getZ(q0); 
+                var bx = ssgvertbuff.getX(q2) - ssgvertbuff.getX(q0), by = ssgvertbuff.getY(q2) - ssgvertbuff.getY(q0), bz = ssgvertbuff.getZ(q2) - ssgvertbuff.getZ(q0); 
+                var cx = ay*bz - by*az, cy = -ax*bz + bx*az, cz = ax*by - bx*ay; 
+                var cleng = Math.sqrt(cx*cx + cy*cy + cz*cz); 
+                var cdot = Math.min(Math.abs(PlotGeometryObject.lightvx*cx + PlotGeometryObject.lightvy*cz + PlotGeometryObject.lightvz*cy)/cleng, 1.0); 
+                //cdot = Math.random(); 
+                var cosfac = (1 - cdot)*0.4; 
+                var flatval = (iflat>0 ? 510+cosfac : -510-cosfac); 
+                var lflatel = (iflat>0?iflat:-iflat)-1; 
+                flatfaceattributes[q0*4+lflatel] = flatval; 
+                flatfaceattributes[q1*4+lflatel] = flatval; 
+                flatfaceattributes[q2*4+lflatel] = flatval; 
+                flatfaceattributes[q3*4+lflatel] = flatval; 
+            }
             iquad++; 
         }
         var k = 0; 
         for (var j = 0; j < passagexcsseq.length; j++) {
-            AddQuad(k+0, k+1, k+2, k+3); 
+            AddQuad(k+0, k+1, k+2, k+3, 2); 
             for (var l = 0; l < passagexcsseq[j]-1; l++) {
                 k += 4; 
-                AddQuad(k+0, k+1, k-4+1, k-4+0); 
-                AddQuad(k+1, k+2, k-4+2, k-4+1);
-                AddQuad(k+2, k+3, k-4+3, k-4+2);
-                AddQuad(k+3, k+0, k-4+0, k-4+3);
+                var l1 = (l%2 + 1)*(Math.floor(l/2)%2 == 0?1:-1);
+                var l2 = (l%2 + 3)*(Math.floor(l/2)%2 == 0?1:-1);
+                AddQuad(k+0, k+1, k-4+1, k-4+0, l1); 
+                AddQuad(k+1, k+2, k-4+2, k-4+1, l2);
+                AddQuad(k+2, k+3, k-4+3, k-4+2, -l1);
+                AddQuad(k+3, k+0, k-4+0, k-4+3, -l2);
             }
-            AddQuad(k+3, k+2, k+1, k+0); 
+            AddQuad(k+3, k+2, k+1, k+0, (passagexcsseq[j]%2 + 2)); 
             k += 4; 
         }
         console.log(k, nxcs, iquad); 
@@ -273,6 +293,8 @@ var PlotGeometryObject =
         var buffergeometry = new THREE.BufferGeometry(); 
         buffergeometry.setIndex(new THREE.BufferAttribute(indices, 1)); 
         buffergeometry.addAttribute('position', ssgvertbuff);
+        buffergeometry.addAttribute('flat4', new THREE.Float32Attribute(flatfaceattributes, 4)); 
+
         //this.passagetubematerial = new THREE.MeshBasicMaterial({ color: 0xDD44EE, shading: THREE.FlatShading, depthWrite:true, depthTest:true }); 
         this.passagetubes = new THREE.Mesh(buffergeometry, this.passagetubematerial);  
         this.scene.add(this.passagetubes); 

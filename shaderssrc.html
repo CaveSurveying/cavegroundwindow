@@ -3,6 +3,7 @@ uniform float redalt; // deltph shading colours
 uniform float vfac; 
 uniform vec4 closecolour; 
 uniform float closedist; 
+varying vec4 vflat4; 
 varying float altitude; 
 float midlump(float v, float offset) 
 {
@@ -11,17 +12,22 @@ float midlump(float v, float offset)
 }
 void main(void) 
 {
-    vec4 ptcolour = vec4(midlump(altitude, redalt), midlump(altitude, redalt-0.667)*0.98, midlump(altitude, redalt-0.333), 1.0); 
+    gl_FragColor = vec4(midlump(altitude, redalt), midlump(altitude, redalt-0.667)*0.98, midlump(altitude, redalt-0.333), 1.0); 
     float fdepth = gl_FragCoord.z / gl_FragCoord.w; 
     float cfac = clamp((closedist - fdepth)*0.1, 0.0, 0.81); 
-    gl_FragColor = mix(ptcolour, closecolour, cfac); 
+    float flatfac = max(0.0, max(max(abs(vflat4.x), abs(vflat4.y)), max(abs(vflat4.z), abs(vflat4.w))) - 510.0); 
+    gl_FragColor = mix(gl_FragColor, closecolour, cfac); 
+    gl_FragColor = mix(gl_FragColor, vec4(0.0, 0.0, 0.0, 1.0), flatfac); 
 }
   </script>
   <script id="vertex_shader_passage" type="x-shader/x-vertex">
 varying float altitude; 
+varying vec4 vflat4; 
+attribute vec4 flat4; 
 void main()
 {
     altitude = position.y; 
+    vflat4 = flat4; 
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
     gl_Position = projectionMatrix * mvPosition; 
 }

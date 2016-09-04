@@ -7,7 +7,8 @@ python ../survexprocessing/parse3ddmp.py --js=test.js --svx=test.svx
 
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
-// * do mountain peak on the horizon
+// * get aspect ratio of triangles to remain constant when device rotates
+// * do mountain peak on the horizon seen from gite
 // * ability to offset the alt and latlng in the phone UI
 // * attribute colouring on the slopes using that trick
 // * move more code into JS files
