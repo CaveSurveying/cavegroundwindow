@@ -10,7 +10,7 @@ adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 // * convert entrances
 // * add an entrance case
 // * parallel lists for the index points in each
-// * ability to select different js files
+// * ability to select different js files of data
 // * relative to main cave loading thing
 
 // * unhosted.org

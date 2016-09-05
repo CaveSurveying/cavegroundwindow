@@ -8,13 +8,17 @@
       body { margin: 0px; overflow: hidden; }
       #viz { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
       #quantbutton { position: absolute; right:0; top: 0; border: thin red solid; background:#ddf; display: block }
-      #quantshow { position: absolute; right:0; top: 0; width: 75%; border: thin red solid; background:#fdd; display: block }
+      #quantshow { position: absolute; right:0; top: 0; width: 75%; border: thin red solid; background:#fdd; display: none }
       #quantshowtext { font-size: 200%; position: relative; left: 0; top: 0; display: none }
       input.selected { background-color: #8e8; } 
       #postext { position: relative; left: 0; top: 0; display: block }
       #postext input, #quantbutton input { font-size: 150%}
       #dcamara { position: absolute; left: 0; bottom: 0; width:50%; height:50%; display: none; background: red }
-      #camara { width:100%; height:100%;  }
+      #camara { width:100%; height:100%; }
+      #choicesplash { position: relative; background-color: #fcc; margin-left:auto; margin-right:auto; margin-top:10%; width:30%; display:block; text-align:center; }
+      #choicesplash:hover { background-color: b; margin-left:auto; margin-right:auto; margin-top:10%; width:30%; display:block; text-align:center; }
+      #choicejs { list-style-type: none; padding-left:0; font-size: 150% }
+      #choicejs a:hover { color: blue; font-weight: bold }
     </style>
     <link rel="manifest" href="manifest.json">
     <script src="three.min.js"></script>
@@ -51,6 +55,10 @@
               <input type="button" value="Drg" id="draggsm"/>
           </div>
         </div>
+      </div>
+      <div id="choicesplash">
+          <ul id="choicejs">
+          </ul>
       </div>
       <div id="dcamara">
         <video id="camara" autoplay controls></video>
@@ -304,12 +312,12 @@ function init()
     setTimeout(resize, 1);
 }
 
-var script = document.createElement('script');
-//script.setAttribute('src', 'maxpleasure2.js');
-script.setAttribute('src', 'test.js');
-//script.setAttribute('src', 'erin2.js');
-script.setAttribute('type', 'text/javascript');
-document.getElementsByTagName('head')[0].appendChild(script);
+function LoadScript(jsname)
+{
+    var script = document.createElement('script');
+    script.setAttribute('src', jsname);
+    document.getElementsByTagName('head')[0].appendChild(script);
+}
 
 // callbackgrom the javascript include file above
 function LoadSvx3d(lsvx3d)
@@ -325,6 +333,27 @@ function LoadSvx3d(lsvx3d)
     
     animate();
 }
+
+// callback from svx3dlist.js include file
+function LoadSvx3dList(lsvx3dlist)
+{
+    for (var i = 0; i < lsvx3dlist.length; i++) {
+        (function() {
+            var li = document.createElement("li"); 
+            var a = document.createElement("a"); 
+            a.textContent = lsvx3dlist[i]["svxname"]; 
+            var svxjs = lsvx3dlist[i]["svxjs"]; 
+            li.addEventListener("click", function() { 
+                document.getElementById('choicesplash').style.display = "none"; 
+                LoadScript(svxjs); 
+            }); 
+            li.appendChild(a); 
+            document.getElementById('choicejs').appendChild(li); // lsvx3dlist[i]["svxname"]
+        })(); 
+    }
+}
+
+LoadScript('svx3dlist.js'); 
 
 
 // add GPS reader to this or do fake positions
