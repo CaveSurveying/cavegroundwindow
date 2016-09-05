@@ -13,7 +13,7 @@
 ; test around the French gite for 43.0331802,0.8239439
 *cs out UTM31   ; +proj=utm +ellps=WGS84 +datum=WGS84 +units=m +zone=31 +no_defs
 *cs UTM31
-*fix X 322725, 4766797 400 ; easting(m) northing(m) alt(m)
+*fix X 322725, 4766797 450 ; easting(m) northing(m) alt(m)
 
 *data normal from to tape compass clino
 ; square
