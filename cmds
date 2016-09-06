@@ -7,9 +7,10 @@ python ../survexprocessing/parse3ddmp.py --js=leckfell.js --svx=/home/goatchurch
 
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
+// * light should minimum be 10m
+// * put entrance triangles back in (and have them converted from the 3d processing)
+// * cave section labelling (by hierarchy)
 // * move more code into JS files
-// * convert entrances
-// * add an entrance case
 // * parallel lists for the index points in each
 // * ability to select different js files of data
 // * relative to main cave loading thing
@@ -24,16 +25,6 @@ adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 // * handle . survey stations
 // * handle alias to . survey stations
 
-
-*fix	3c20ae	69907.233	77407.244	268.392	;sdE 0.0007m, sdN 0.0005m, sdElev 0.0013m
-GPS readings were 54.195764  -2.5627084   275 (but in system is 322)
-getting readings in field of 140 from gpsstatus 187 on app   -- always 47m too high!
-
-
-// * initialize with high view looking down
-// * trail should work with key motions
-// * offset the positions of everything by the base position origin
-// * vfac and redalt say it's about the colours
 // * provide an offset and digit rounding to the java file to shorten it
 // * separate makefiles for the svx on loser and on leckfell
 // * other peaks in view into database (put them into the svx files as visible peaks if possible???)
@@ -50,6 +41,8 @@ getting readings in field of 140 from gpsstatus 187 on app   -- always 47m too h
 
 
 // DONE
+// * offset the positions of everything by the base position origin
+// * trail should work with key motions
 // * assign date attribute onto legs as a year float
 // * ability to offset the alt and latlng in the phone UI
 // * dot trail to spawn off the dots from current position

@@ -271,7 +271,8 @@ var PositionObject =
 }
 
 
-var ifakegpsstart = 0, fakegpslongitude = 0.823994+0.001, fakegpslatitude = 43.033223, fakegpsaltitude = 200;  
+//var ifakegpsstart = 0, fakegpslongitude = 0.823994+0.001, fakegpslatitude = 43.033223, fakegpsaltitude = 500;  
+var ifakegpsstart = 0, fakegpslongitude = 0.82225744, fakegpslatitude = 43.0327787, fakegpsaltitude = 477;  
 function fakegpsgenerator()
 {
     var ioffs = 30, ifac = 1.0/6; 

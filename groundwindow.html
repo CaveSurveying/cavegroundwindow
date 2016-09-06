@@ -15,8 +15,7 @@
       #postext input, #quantbutton input { font-size: 150%}
       #dcamara { position: absolute; left: 0; bottom: 0; width:50%; height:50%; display: none; background: red }
       #camara { width:100%; height:100%; }
-      #choicesplash { position: relative; background-color: #fcc; margin-left:auto; margin-right:auto; margin-top:10%; width:30%; display:block; text-align:center; }
-      #choicesplash:hover { background-color: b; margin-left:auto; margin-right:auto; margin-top:10%; width:30%; display:block; text-align:center; }
+      #choicesplash { position: relative; background-color: #fcc; margin-left:auto; margin-right:auto; margin-top:10%; width:80%; display:block; text-align:center; }
       #choicejs { list-style-type: none; padding-left:0; font-size: 150% }
       #choicejs a:hover { color: blue; font-weight: bold }
     </style>
@@ -238,6 +237,12 @@ function quantshowshow(qtext)
 }
 
 
+function initelements() 
+{
+    quantshowelement = document.getElementById('quantshow'); 
+    quantshowtextelement = document.getElementById('quantshowtext'); 
+    postextelement = document.getElementById('postext'); 
+}
 
 function init() 
 {
@@ -245,10 +250,6 @@ function init()
     threejselement = renderer.domElement;
     vizcontainer = document.getElementById('viz');
     vizcontainer.appendChild(threejselement);
-    
-    quantshowelement = document.getElementById('quantshow'); 
-    quantshowtextelement = document.getElementById('quantshowtext'); 
-    postextelement = document.getElementById('postext'); 
     
     scene = new THREE.Scene();
     PlotGeometryObject.scene = scene; 
@@ -271,10 +272,15 @@ function init()
     light.position.set(0, 2500, 0);
     scene.add(light);
 
-    PlotGeometryObject.LoadPassageTubesP(svx3d.passagexcsseq, svx3d.passagexcs, 1.0/svx3d.scale); // before centrelines because they overwrite in the depth buffer
-    PlotGeometryObject.LoadMountains(svx3d.landmarks, 1.0/svx3d.scale); 
+    if (svx3d.passagexcsseq !== undefined)
+        PlotGeometryObject.LoadPassageTubesP(svx3d.passagexcsseq, svx3d.passagexcs, 1.0/svx3d.scale); // before centrelines because they overwrite in the depth buffer
+    if (svx3d.landmarks !== undefined)
+        PlotGeometryObject.LoadMountains(svx3d.landmarks, 1.0/svx3d.scale); 
+        
     PlotGeometryObject.LoadCentrelines(svx3d.legnodes, svx3d.legindexes, 1.0/svx3d.scale); 
-    //PlotGeometryObject.LoadEntrances(svx3d.entrances, 1.0/svx3d.scale); 
+    if (svx3d.legentrances !== undefined)
+        PlotGeometryObject.LoadEntrances(svx3d.legnodes, svx3d.legentrances, 1.0/svx3d.scale); 
+    
     PlotGeometryObject.setredalts(PlotGeometryObject.redalt, PlotGeometryObject.vfac); 
  
     PositionObject.LoadTrail(scene); 
@@ -334,25 +340,28 @@ function LoadSvx3d(lsvx3d)
     animate();
 }
 
+function AddSvx3dtolist(svxname, svxjs)
+{
+    var li = document.createElement("li"); 
+    var a = document.createElement("a"); 
+    a.textContent = svxname; 
+    li.addEventListener("click", function() { 
+        document.getElementById('choicesplash').style.display = "none"; 
+        quantshowshow("Loading "+svxjs); 
+        LoadScript(svxjs); 
+    }); 
+    li.appendChild(a); 
+    document.getElementById('choicejs').appendChild(li); 
+}
+
 // callback from svx3dlist.js include file
 function LoadSvx3dList(lsvx3dlist)
 {
-    for (var i = 0; i < lsvx3dlist.length; i++) {
-        (function() {
-            var li = document.createElement("li"); 
-            var a = document.createElement("a"); 
-            a.textContent = lsvx3dlist[i]["svxname"]; 
-            var svxjs = lsvx3dlist[i]["svxjs"]; 
-            li.addEventListener("click", function() { 
-                document.getElementById('choicesplash').style.display = "none"; 
-                LoadScript(svxjs); 
-            }); 
-            li.appendChild(a); 
-            document.getElementById('choicejs').appendChild(li); // lsvx3dlist[i]["svxname"]
-        })(); 
-    }
+    for (var i = 0; i < lsvx3dlist.length; i++) 
+        AddSvx3dtolist(lsvx3dlist[i]["svxname"], lsvx3dlist[i]["svxjs"]); 
 }
 
+initelements(); 
 LoadScript('svx3dlist.js'); 
 
 

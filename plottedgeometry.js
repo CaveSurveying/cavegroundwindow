@@ -89,15 +89,15 @@ var PlotGeometryObject =
         }
         this.scene.add(card);
         
-        buffergeometry = new THREE.BufferGeometry(); 
+        var buffergeometry = new THREE.BufferGeometry(); 
         buffergeometry.addAttribute('position', peakpositionbuff); 
         buffergeometry.addAttribute('pcorner', new THREE.BufferAttribute(peakcorner, 1)); 
         this.peaktrianglematerial = new THREE.ShaderMaterial({
             uniforms: { trianglesize: {type: 'f', value: 15.0}, 
                         aspect: { type: 'f', value: 1.0 }
                       }, 
-            vertexShader: getshader('vertexShader_peaktriangle'),
-            depthWrite:true, depthTest:true, 
+            vertexShader: getshader('vertex_shader_peaktriangle'),
+            depthWrite:true, depthTest:true, // how is the colour being set to red??
             side: THREE.DoubleSide
         }); 
         
@@ -115,7 +115,7 @@ var PlotGeometryObject =
                         redalt: { type: 'f', value: this.redalt },
                         vfac: { type: 'f', value: this.vfac } 
                       }, 
-            vertexShader: getshader('vertexShader_centreline'),
+            vertexShader: getshader('vertex_shader_centreline'),
             fragmentShader: getshader('fragment_shader_centreline'), 
             depthWrite:true, depthTest:true,  // not sure these work
             linewidth:3 
@@ -175,11 +175,13 @@ var PlotGeometryObject =
         this.scene.add(this.centrelines); 
     },
     
-    LoadEntrances: function(svxents, svxscaleInv)
+// vertex_shader_enttriangle
+    LoadEntrances: function(legnodes, legentrances, svxscaleInv)
     {
-        var entpositionbuff = new THREE.BufferAttribute(new Float32Array(svxents.length*9), 3); 
-        var entcorner = new Float32Array(svxents.length*3); 
-        var svxcaveindex = new Float32Array(svxents.length*3); 
+        var nentrances = legentrances.length/2; 
+        var entpositionbuff = new THREE.BufferAttribute(new Float32Array(nentrances*9), 3); 
+        var entcorner = new Float32Array(nentrances*3); 
+        var svxcaveindex = new Float32Array(nentrances*3); 
         
         this.entgeometry = new THREE.BufferGeometry(); 
         this.entgeometry.addAttribute('position', entpositionbuff); 
@@ -199,20 +201,21 @@ var PlotGeometryObject =
             depthWrite:true, depthTest:true, 
             side: THREE.DoubleSide
         }); 
-        var enttriangles = new THREE.Mesh(this.entgeometry, this.enttrianglematerial);  
+        enttriangles = new THREE.Mesh(this.entgeometry, this.enttrianglematerial);  
         scene.add(enttriangles); 
 
         this.entlabelscard = new THREE.Object3D();
-        for (var i = 0; i < svxents.length; i++) {
-            //var p = latlngtopt(svxents[i][1], svxents[i][2], svxents[i][3]); 
-            var x1 = -svxents[i][1]*svxscaleInv, y1=svxents[i][3]*svxscaleInv, z1=svxents[i][2]*svxscaleInv; // not checked
+        for (var i = 0; i < nentrances; i++) {
+            var i1 = legentrances[i*2+0]*3; 
+            var x1 = -legnodes[i1]*svxscaleInv, y1=legnodes[i1+2]*svxscaleInv, z1=legnodes[i1+1]*svxscaleInv; 
             var p = {x:x1, y:y1, z:z1}; 
             entpositionbuff.setXYZ(i*3, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+1, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+2, p.x, p.y, p.z); 
             entcorner[i*3] = 0.0;  entcorner[i*3+1] = 1.0;  entcorner[i*3+2] = 2.0; 
-            svxcaveindex[i*3] = svxents[i][4];  svxcaveindex[i*3+1] = svxents[i][4];  svxcaveindex[i*3+2] = svxents[i][4]; 
+            //svxcaveindex[i*3] = svxents[i][4];  svxcaveindex[i*3+1] = svxents[i][4];  svxcaveindex[i*3+2] = svxents[i][4]; 
+            svxcaveindex[i*3] = 0;  svxcaveindex[i*3+1] = 0;  svxcaveindex[i*3+2] = 0; 
             
-            if (svxents[i][0].match(/p\d+[a-z]?$/) !== null) {
-                this.MakeLabel(this.entlabelscard, svxents[i][0], "rgba(0,200,200,0.95)", p, 0.5);  // rgba(0,200,200,0.95)
+            if (true || (legentrances[i*2+1].match(/p\d+[a-z]?$/) !== null)) {
+                this.MakeLabel(this.entlabelscard, legentrances[i*2+1], "rgba(0,200,200,0.95)", p, 0.5);  // rgba(0,200,200,0.95)
             }
         }
         this.scene.add(this.entlabelscard);

@@ -1,6 +1,6 @@
 *begin test
 
-; house
+; home in Liverpool
 ;*cs out OSGB:SJ
 ;*cs OSGB:SJ
 ;*fix X 35300 89300 50 
@@ -13,7 +13,7 @@
 ; test around the French gite for 43.0331802,0.8239439
 *cs out UTM31   ; +proj=utm +ellps=WGS84 +datum=WGS84 +units=m +zone=31 +no_defs
 *cs UTM31
-*fix X 322725, 4766797 450 ; easting(m) northing(m) alt(m)
+*fix X 322725, 4766797 410 ; easting(m) northing(m) alt(m)
 
 *data normal from to tape compass clino
 ; square
@@ -32,6 +32,11 @@ X  8 5       225    45
 X  9 5       0      45
 X  E 40      45     20
 *entrance E
+
+*entrance 2
+*entrance 3
+
+
 
 *data passage station left right up down
 1 5 5 2 2
