@@ -110,7 +110,6 @@ var PlotGeometryObject =
         this.centrelinematerial = new THREE.ShaderMaterial({
             uniforms: { closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
                         closedist: { type: 'f', value: 5.0 }, 
-                        yeartime: { type: 'f', value: 9999.0 }, 
                         selectedvsvxcaveindex: { type: 'f', value: -1.0 }, 
                         redalt: { type: 'f', value: this.redalt },
                         vfac: { type: 'f', value: this.vfac } 
@@ -125,7 +124,6 @@ var PlotGeometryObject =
         var centrelinepositionsbuff = new THREE.BufferAttribute(new Float32Array(nlegs*2*3), 3);
         var cosslope = new Float32Array(nlegs*2); 
         var svxcaveindex = new Float32Array(nlegs*2); 
-        var svxyearvalue = new Float32Array(nlegs*2); 
 
         for (var i = 0; i < nlegs; i++) {
             var i0 = legindexes[i*2]*3; 
@@ -148,18 +146,6 @@ var PlotGeometryObject =
                 this.altmaxF = legnodes[i0+2]; 
             if ((this.altmaxF < legnodes[i1+2]))
                 this.altmaxF = legnodes[i1+2]; 
-                
-            /*
-            svxcaveindex[i*2] = svxleg[6]; 
-            svxcaveindex[i*2+1] = svxleg[6]; 
-            svxyearvalue[i*2] = svxleg[7]; 
-            svxyearvalue[i*2+1] = svxleg[7]; 
-            
-            if (svxleg[7] != 1900) {
-                if ((i == 0) || (svxleg[7] < minyearvalue))  minyearvalue = svxleg[7]; 
-                if ((i == 0) || (svxleg[7] > maxyearvalue))  maxyearvalue = svxleg[7]; 
-            }
-            */
         }
         console.log("altminmax", this.altminF*svxscaleInv, this.altmaxF*svxscaleInv); 
         this.vfac = 0.9/((this.altmaxF - this.altminF)*svxscaleInv); 
@@ -169,7 +155,6 @@ var PlotGeometryObject =
         this.centrelinebuffergeometry.addAttribute('position', centrelinepositionsbuff);
         this.centrelinebuffergeometry.addAttribute('cosslope', new THREE.BufferAttribute(cosslope, 1)); 
         this.centrelinebuffergeometry.addAttribute('svxcaveindex', new THREE.BufferAttribute(svxcaveindex, 1)); 
-        this.centrelinebuffergeometry.addAttribute('svxyearvalue', new THREE.BufferAttribute(svxyearvalue, 1)); 
 
         this.centrelines = new THREE.LineSegments(this.centrelinebuffergeometry, this.centrelinematerial);  
         this.scene.add(this.centrelines); 

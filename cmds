@@ -7,12 +7,9 @@ python ../survexprocessing/parse3ddmp.py --js=leckfell.js --svx=/home/goatchurch
 
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
-// * light should minimum be 10m
-// * put entrance triangles back in (and have them converted from the 3d processing)
 // * cave section labelling (by hierarchy)
 // * move more code into JS files
 // * parallel lists for the index points in each
-// * ability to select different js files of data
 // * relative to main cave loading thing
 
 // * unhosted.org
@@ -20,10 +17,6 @@ adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 // * do Philip's conversion stuff
 // * conversion code to note multiple node names for a node
 // * why isn't the touch screen working on computer?
-
-// * tunnel: make the badsvx case work
-// * handle . survey stations
-// * handle alias to . survey stations
 
 // * provide an offset and digit rounding to the java file to shorten it
 // * separate makefiles for the svx on loser and on leckfell
@@ -41,6 +34,9 @@ adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
 
 // DONE
+// * light should minimum be 10m
+// * ability to select different js files of data
+// * put entrance triangles back in (and have them converted from the 3d processing)
 // * offset the positions of everything by the base position origin
 // * trail should work with key motions
 // * assign date attribute onto legs as a year float

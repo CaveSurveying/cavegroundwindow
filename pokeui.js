@@ -5,7 +5,7 @@ var PokeUI = {
     touchDelta: new THREE.Vector2(), 
     touchtime: null, 
     touchmovestate: 0, // 1 is touchdrag, 2 is dragging left-right for alpha compass rotate, 3 for depth of fogbrightness, 4 pinch for FOV change, 5 for point selection
-    touchmovevalueStart: null, 
+    touchmovevalueStart: 1.0, 
     stgsmdisplacementx:0, stgsmdisplacementy:0, stgsmdisplacementz:0, 
     bdraggsmmode: false, 
 
@@ -22,7 +22,7 @@ var PokeUI = {
             this.touchmovestate = 1; // pre-single move, but don't know direction of drag
         } else if ((event.touches.length == 2) && (this.touchmovestate <= 1)) {
             this.touchStart.set(event.touches[1].pageX - event.touches[0].pageX, event.touches[1].pageX - event.touches[0].pageY); 
-            this.touchmovevalueStart = camera.fov; 
+            this.touchmovevalueStart = (bshowvideobackground ? backgroundcamerascale : camera.fov); 
             quantshowshow("**"); 
             this.touchmovestate = 4; 
         }
@@ -92,11 +92,17 @@ var PokeUI = {
                 controls.alphaoffset = this.touchmovevalueStart + touchmovedistance*0.3;  
                 quantshowtextelement.textContent = "A-offs: "+controls.alphaoffset.toFixed(0); 
             } else if (touchmovestateN == 3) {
-                PlotGeometryObject.setclosedistvalueP(Math.max(0.0, this.touchmovevalueStart - Math.max(1.0, this.touchmovevalueStart)*touchmovedistance*(touchmovedistance < 0 ? 0.02 : 0.005))); 
+                PlotGeometryObject.setclosedistvalueP(Math.max(minlightdistance, this.touchmovevalueStart - Math.max(1.0, this.touchmovevalueStart)*touchmovedistance*(touchmovedistance < 0 ? 0.02 : 0.005))); 
                 quantshowtextelement.textContent = "Light: "+(PlotGeometryObject.centrelinematerial.uniforms.closedist.value).toFixed(0)+"m"; 
             } else if (touchmovestateN == 4) { 
-                camera.fov = Math.min(175.0, Math.max(1.0, this.touchmovevalueStart*touchmovedistance)); 
-                quantshowtextelement.textContent = "FOV: "+camera.fov.toFixed(0)+"deg"; 
+                if (bshowvideobackground) {
+                    backgroundcamerascale = this.touchmovevalueStart/touchmovedistance; 
+                    backgroundcamera.projectionMatrix.makeScale(backgroundcamerascale, backgroundcamerascale, backgroundcamerascale); 
+                    quantshowtextelement.textContent = "Backcamm scale: "+backgroundcamerascale.toFixed(2); 
+                } else {
+                    camera.fov = Math.min(175.0, Math.max(1.0, this.touchmovevalueStart*touchmovedistance)); 
+                    quantshowtextelement.textContent = "FOV: "+camera.fov.toFixed(0)+"deg"; 
+                }
             } 
         } else {
             if (touchmovestateN == 2) {

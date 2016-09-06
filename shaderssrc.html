@@ -40,13 +40,11 @@ void main()
 uniform vec4 closecolour; 
 uniform float closedist; 
 uniform float selectedvsvxcaveindex; 
-uniform float yeartime; 
 uniform float redalt; 
 uniform float vfac; 
 varying float altitude; 
 varying float vcosslope; 
 varying float vsvxcaveindex; 
-varying float vsvxyearvalue; 
 float midlump(float v, float offset) 
 {
     float lv = (mod(v*vfac + offset, 1.0) - 0.5)/0.5; 
@@ -54,15 +52,10 @@ float midlump(float v, float offset)
 }
 void main(void) 
 {
-    const float yearwhite = 180.0/365.0; 
-    if (vsvxyearvalue > yeartime)
-        discard; 
     vec4 ptcolour = vec4(midlump(altitude, redalt), midlump(altitude, redalt-0.667)*0.98, midlump(altitude, redalt-0.333), 1.0); 
     vec4 sptcolour = mix(ptcolour, vec4(0.0, 0.0, 0.0, 1.0), 0.6*(1.0-vcosslope)); 
     float fdepth = gl_FragCoord.z / gl_FragCoord.w; 
     float cfac = clamp((closedist - fdepth)*0.1, 0.0, 0.81); 
-    if (vsvxyearvalue > yeartime - yearwhite)
-        cfac = 0.91; 
     if (vsvxcaveindex == selectedvsvxcaveindex)
         gl_FragColor = mix(sptcolour, vec4(0.0, 1.0, 1.0, 1.0), 0.8); 
     else
@@ -72,17 +65,14 @@ void main(void)
   <script id="vertex_shader_centreline" type="x-shader/x-vertex">
 attribute float cosslope; 
 attribute float svxcaveindex; 
-attribute float svxyearvalue; 
 varying float altitude; 
 varying float vcosslope; 
 varying float vsvxcaveindex; 
-varying float vsvxyearvalue; 
 void main()
 {
     altitude = position.y; 
     vcosslope = cosslope; 
     vsvxcaveindex = svxcaveindex;  
-    vsvxyearvalue = svxyearvalue; 
     vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
     gl_Position = projectionMatrix * mvPosition; 
 }
@@ -167,13 +157,11 @@ attribute float svxcaveindex;
 varying float altitude; 
 varying float vcosslope; 
 varying float vsvxcaveindex; 
-varying float vsvxyearvalue; 
 void main()
 {
     altitude = position.y; 
     vcosslope = 1.0; 
     vsvxcaveindex = svxcaveindex; 
-    vsvxyearvalue = 9999.0*0.0; 
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
     gl_Position = projectionMatrix * mvPosition; 
     float strianglesize = trianglesize*gl_Position.z*10.0; 

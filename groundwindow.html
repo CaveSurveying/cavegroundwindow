@@ -48,7 +48,7 @@
               <input type="button" value="Hop" id="camerahop"/>
               <input type="button" value="Cen" id="reset31"/>
               <input type="button" value="Mag" id="magorientset"/>
-              <input type="button" value="See" id="camera"/>
+              <input type="button" value="See" id="backcamera"/>
               <input type="button" value="Lab" id="labelsonoff"/>
               <input type="button" value="Top" id="highabove"/>
               <input type="button" value="Drg" id="draggsm"/>
@@ -107,6 +107,7 @@ var linewidth = 3;
 var backgroundscene = null, backgroundcamera = null; 
 var videotexture; 
 var backgroundvideo = null; 
+var backgroundcamerascale = 1.67; 
 window.URL = window.URL || window.webkitURL; 
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia; 
 var bshowvideobackground = false; 
@@ -114,12 +115,12 @@ function LoadVideoBackground()
 {
     if (bshowvideobackground) {
         bshowvideobackground = false; 
-        document.getElementById("camera").className = ""; 
+        document.getElementById("backcamera").className = ""; 
         return; 
     }
     if (backgroundscene) {
         bshowvideobackground = true; 
-        document.getElementById("camera").className = "selected"; 
+        document.getElementById("backcamera").className = "selected"; 
         return; 
     }
         
@@ -137,9 +138,11 @@ function LoadVideoBackground()
         backgroundmesh.material.depthWrite = false; 
         backgroundscene = new THREE.Scene(); 
         backgroundcamera = new THREE.Camera(); 
+        backgroundcamera.projectionMatrix.makeScale(backgroundcamerascale, backgroundcamerascale, backgroundcamerascale); 
         backgroundscene.add(backgroundcamera); 
         backgroundscene.add(backgroundmesh); 
         bshowvideobackground = true; 
+        document.getElementById("backcamera").className = "selected"; 
     }, function() { alert("bad camera"); }); 
 }
 
@@ -244,6 +247,9 @@ function initelements()
     postextelement = document.getElementById('postext'); 
 }
 
+var neardistance = 3; 
+var minlightdistance = 10; 
+var fardistance = 70000; 
 function init() 
 {
     renderer = new THREE.WebGLRenderer();
@@ -255,8 +261,6 @@ function init()
     PlotGeometryObject.scene = scene; 
     var fieldofview = 30; // degrees (smaller is more tunnel like)
     var aspect = 1;       // reset in resize()
-    var neardistance = 5; 
-    var fardistance = 70000; 
     camera = new THREE.PerspectiveCamera(fieldofview, aspect, neardistance, fardistance);
     camera.position.set(0, 0, 0); 
     scene.add(camera); 
@@ -295,7 +299,7 @@ function init()
         
     document.getElementById("camerahop").addEventListener("click", function() { PositionObject.ZhopGo(1500); }); 
     document.getElementById("reset31").addEventListener("click", reset31); 
-    document.getElementById("camera").addEventListener("click", LoadVideoBackground); 
+    document.getElementById("backcamera").addEventListener("click", LoadVideoBackground); 
     document.getElementById("magorientset").addEventListener("click", function(event) { event.preventDefault(); window.addEventListener('absolutedeviceorientation', tryabsoluteorient); }); 
     document.getElementById("highabove").addEventListener("click", HighTopView); 
     document.getElementById("draggsm").addEventListener("click", function(event) { event.preventDefault(); PokeUI.bdraggsmmode = !PokeUI.bdraggsmmode; document.getElementById("draggsm").className = (PokeUI.bdraggsmmode ? "selected" : ""); }); 
