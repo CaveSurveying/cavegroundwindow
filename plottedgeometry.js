@@ -340,6 +340,11 @@ var PlotGeometryObject =
             this.entlabelscard.visible = !this.entlabelscard.visible; 
         PositionObject.footposmesh.visible = !PositionObject.footposmesh.visible; 
         document.getElementById("labelsonoff").className = (PositionObject.footposmesh.visible ? "" : "selected"); 
+    }, 
+    togglepassages: function(event) {
+        this.passagetubes.visible = !this.passagetubes.visible; 
+        document.getElementById("passagesonoff").className = (this.passagetubes.visible ? "" : "selected"); 
     }
+    
 };
 

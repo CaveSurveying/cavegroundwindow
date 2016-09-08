@@ -52,6 +52,7 @@
               <input type="button" value="Lab" id="labelsonoff"/>
               <input type="button" value="Top" id="highabove"/>
               <input type="button" value="Drg" id="draggsm"/>
+              <input type="button" value="Psg" id="passagesonoff"/>
           </div>
         </div>
       </div>
@@ -107,7 +108,7 @@ var linewidth = 3;
 var backgroundscene = null, backgroundcamera = null; 
 var videotexture; 
 var backgroundvideo = null; 
-var backgroundcamerascale = 1.67; 
+var backgroundcamerascale = 1.67; // may need different scale on y and x or by aspect ratio of something
 window.URL = window.URL || window.webkitURL; 
 navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia; 
 var bshowvideobackground = false; 
@@ -305,6 +306,8 @@ function init()
     document.getElementById("draggsm").addEventListener("click", function(event) { event.preventDefault(); PokeUI.bdraggsmmode = !PokeUI.bdraggsmmode; document.getElementById("draggsm").className = (PokeUI.bdraggsmmode ? "selected" : ""); }); 
     
     document.getElementById("labelsonoff").addEventListener("click", function(event) { PlotGeometryObject.togglelabels(event); }); 
+    document.getElementById("passagesonoff").addEventListener("click", function(event) { PlotGeometryObject.togglepassages(event); }); 
+
     //document.getElementById("yearcycle").addEventListener("click", function(event) { yeartimestep = (yeartimestep == -1.0 ? 1.0 : -1.0); }); 
 
     quantshowelement.addEventListener("click", quantshowhide, true); // so that the preventdefault stops it hiding
