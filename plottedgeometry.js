@@ -166,7 +166,7 @@ var PlotGeometryObject =
 // vertex_shader_enttriangle
     LoadEntrances: function(legnodes, legentrances, svxscaleInv)
     {
-        var nentrances = legentrances.length/2; 
+        var nentrances = legentrances.length/3; 
         var entpositionbuff = new THREE.BufferAttribute(new Float32Array(nentrances*9), 3); 
         var entcorner = new Float32Array(nentrances*3); 
         var entindex = new Float32Array(nentrances*3); 
@@ -194,7 +194,7 @@ var PlotGeometryObject =
 
         this.entlabelscard = new THREE.Object3D();
         for (var i = 0; i < nentrances; i++) {
-            var i1 = legentrances[i*2+0]*3; 
+            var i1 = legentrances[i*3+0]*3; 
             var x1 = -legnodes[i1]*svxscaleInv, y1=legnodes[i1+2]*svxscaleInv, z1=legnodes[i1+1]*svxscaleInv; 
             var p = {x:x1, y:y1, z:z1}; 
             entpositionbuff.setXYZ(i*3, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+1, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+2, p.x, p.y, p.z); 
@@ -202,7 +202,7 @@ var PlotGeometryObject =
             //svxcaveindex[i*3] = svxents[i][4];  svxcaveindex[i*3+1] = svxents[i][4];  svxcaveindex[i*3+2] = svxents[i][4]; 
             //svxcaveindex[i*3] = 0;  svxcaveindex[i*3+1] = 0;  svxcaveindex[i*3+2] = 0; 
             
-            if (true || (legentrances[i*2+1].match(/p\d+[a-z]?$/) !== null)) {
+            if (true || (legentrances[i*3+1].match(/p\d+[a-z]?$/) !== null)) {
                 this.MakeLabel(this.entlabelscard, legentrances[i*2+1], "rgba(0,200,200,0.95)", p, 0.5);  // rgba(0,200,200,0.95)
             }
         }

@@ -88,16 +88,18 @@ var PickingObject = {
         } 
         
         // derive the blockname
-        var blockname = null; 
+        var blockname = null, selblockname = null; 
         if (this.minsvxentdsq >= 0) {
             var pix2dist = Math.sqrt(this.minsvxentdsq)*window.innerHeight; 
             if (pix2dist <= 80) {
                 if (this.minisvxents < svx3d.nentrances) {
-                    blockname = svx3d.legentrances[this.minisvxents*2+1]; 
+                    blockname = svx3d.legentrances[this.minisvxents*3+1]; 
+                    selblockname = svx3d.legentrances[this.minisvxents*3+2]; 
                 } else if (this.minisvxents < svx3d.nentrances + svx3d.nlegs) {
                     for (var j = 1; j < svx3d.legblockstarts.length; j++) {
                         if (svx3d.legblockstarts[j] >= this.minisvxents - svx3d.nentrances) {
-                            blockname = svx3d.blocknames[j-1]
+                            blockname = svx3d.blocknames[j-1]; 
+                            selblockname = blockname; 
                             break; 
                         }
                     }
@@ -108,7 +110,10 @@ var PickingObject = {
 
         if (blockname !== null) {
             console.log("blockname", blockname); 
-            quantshowtextelement.textContent = (this.minisvxents < svx3d.nentrances ? "Entrance of:" : "Block of: ")+blockname; 
+            if (this.minisvxents < svx3d.nentrances)
+                quantshowtextelement.textContent = "Entrance of:"+blockname+" sel:"+selblockname; 
+            else
+                quantshowtextelement.textContent = "Block of: "+blockname; 
             quantshowhidedelay(5000); 
         }
         this.setselectedblock(blockname); 
@@ -142,12 +147,13 @@ var PickingObject = {
         PlotGeometryObject.centrelinematerial.uniforms.selindexhi.value = svx3d.legblockstarts[bselindexhi]; 
 
 console.log("setselblock ", blockname, bselindexlo, bselindexhi, svx3d.legblockstarts[bselindexlo], svx3d.legblockstarts[bselindexhi]); 
-        var bselxsecindexlo = svx3d.xsectblockstarts[bselindexlo]; 
-        var bselxsecindexhi = svx3d.xsectblockstarts[bselindexhi]; 
-        PlotGeometryObject.passagetubematerial.uniforms.selindexlo.value = (bselxsecindexlo != 0 ? svx3d.cumupassagexcsseq[bselxsecindexlo - 1] : 0); 
-        PlotGeometryObject.passagetubematerial.uniforms.selindexhi.value = (bselxsecindexhi != 0 ? svx3d.cumupassagexcsseq[bselxsecindexhi - 1] : 0); 
+        if (svx3d.xsectblockstarts !== undefined) {
+            var bselxsecindexlo = svx3d.xsectblockstarts[bselindexlo]; 
+            var bselxsecindexhi = svx3d.xsectblockstarts[bselindexhi]; 
+            PlotGeometryObject.passagetubematerial.uniforms.selindexlo.value = (bselxsecindexlo != 0 ? svx3d.cumupassagexcsseq[bselxsecindexlo - 1] : 0); 
+            PlotGeometryObject.passagetubematerial.uniforms.selindexhi.value = (bselxsecindexhi != 0 ? svx3d.cumupassagexcsseq[bselxsecindexhi - 1] : 0); 
 console.log("selxsec ", bselxsecindexlo, bselxsecindexhi, PlotGeometryObject.passagetubematerial.uniforms.selindexlo.value, PlotGeometryObject.passagetubematerial.uniforms.selindexhi.value); 
-
+        }
         // PlotGeometryObject.enttrianglematerial.uniforms.selectedvsvxcaveindex.value = selectedvsvxcaveindex; 
         //for (var i = 0; i < textlabelmaterials.length; i++) 
         //    textlabelmaterials[i].uniforms.closedist.value = closedistvalue; 
