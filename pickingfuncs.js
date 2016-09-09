@@ -3,17 +3,21 @@
 // should be in its own object
 var PickingObject = {
     
-    isvxents: 0, 
     minisvxents: -1, 
     minsvxentdsq: -1, 
+    isvxents: 0, 
+    
     vStart: new THREE.Vector3(), 
     vEnd: new THREE.Vector3(), 
     selectbatchproctimeout: null, 
     selectposx: 0, 
     selectposy: 0,
     pickray: new THREE.Raycaster(), 
+    
+    
     selectbatchproc: function()
     {
+        // starting off condition
         if (this.selectbatchproctimeout == null) {
             this.isvxents = 0; 
             this.minisvxents = -1; 
@@ -24,15 +28,19 @@ var PickingObject = {
             this.selectbatchproctimeout = null; 
         }
         
-        for (var j = 501; j > 0; j--) { // batch in this callback to work through
-            if ((this.isvxents == svxents.length) && (this.minsvxentdsq != -1)) {
+        // batch of elements to work through
+        for (var j = 501; j > 0; j--) { 
+            
+            // bail out if entrance found that is close enough
+            if ((this.isvxents == svx3d.nentrances) && (this.minsvxentdsq != -1)) {
                 var pix2dist = Math.sqrt(this.minsvxentdsq)*window.innerHeight; 
                 if (pix2dist <= 60)
                     break; 
             }
-            if (this.isvxents < svxents.length) {
-                this.vStart.fromArray(entgeometry.attributes.position.array, this.isvxents*9);
-                //var dsq = pickray.ray.distanceSqToPoint(vStart); 
+            
+            // find closest entrance position
+            if (this.isvxents < svx3d.nentrances) {
+                this.vStart.fromArray(PlotGeometryObject.entgeometry.attributes.position.array, this.isvxents*9);
                 this.vStart.project(camera); 
                 if (this.vStart.z > 0.0) {
                     var dx = (this.vStart.x - this.selectposx)*camera.aspect
@@ -41,11 +49,12 @@ var PickingObject = {
                     if ((this.minisvxents == -1) || (dsq < this.minsvxentdsq)) {
                         this.minsvxentdsq = dsq; 
                         this.minisvxents = this.isvxents; 
-                        this.vEnd.fromArray(entgeometry.attributes.position.array, this.isvxents*9);
                     }
                 }
-            } else if (this.isvxents < svxents.length + svxlegs.length) {
-                var i = this.isvxents - svxents.length; 
+                
+            // find closest leg position
+            } else if (this.isvxents < svx3d.nentrances + svx3d.nlegs) {
+                var i = this.isvxents - svx3d.nentrances; 
                 this.vStart.fromArray(PlotGeometryObject.centrelinebuffergeometry.attributes.position.array, i*6);
                 this.vEnd.fromArray(PlotGeometryObject.centrelinebuffergeometry.attributes.position.array, i*6+3);
                 this.vStart.project(camera); 
@@ -71,35 +80,43 @@ var PickingObject = {
             }
             this.isvxents++; 
         }
+        
+        // callback for next batch
         if (j == 0) {
             this.selectbatchproctimeout = setTimeout(this.selectbatchproc.bind(this), 10); 
-            //console.log("batch", isvxents); 
             return; 
         } 
-        var ni = -1; 
+        
+        // derive the blockname
+        var blockname = null; 
         if (this.minsvxentdsq >= 0) {
             var pix2dist = Math.sqrt(this.minsvxentdsq)*window.innerHeight; 
             if (pix2dist <= 80) {
-                if (this.minisvxents < svxents.length) {
-                    quantshowtextelement.textContent = "Entrance of: "+svxents[this.minisvxents][0]; 
-                    quantshowhidedelay(5000); 
-                    ni = svxents[this.minisvxents][4]; 
-                } else if (this.minisvxents < svxents.length + svxlegs.length) {
-                    var ni = svxlegs[this.minisvxents - svxents.length][6]; 
-                    if (ni >= 0) {
-                        quantshowtextelement.textContent = "Cave: "+svxnames[ni]; 
-                        quantshowhidedelay(5000); 
+                if (this.minisvxents < svx3d.nentrances) {
+                    blockname = svx3d.legentrances[this.minisvxents*2+1]; 
+                } else if (this.minisvxents < svx3d.nentrances + svx3d.nlegs) {
+                    for (var j = 1; j < svx3d.legblockstarts.length; j++) {
+                        if (svx3d.legblockstarts[j] >= this.minisvxents - svx3d.nentrances) {
+                            blockname = svx3d.blocknames[j-1]
+                            break; 
+                        }
                     }
+                        
                 }
-                console.log("pix2dist", pix2dist, ni); 
             }
         }
-        this.setselectedindex(ni); 
+
+        if (blockname !== null) {
+            console.log("blockname", blockname); 
+            quantshowtextelement.textContent = (this.minisvxents < svx3d.nentrances ? "Entrance of:" : "Block of: ")+blockname; 
+            quantshowhidedelay(5000); 
+        }
+        this.setselectedblock(blockname); 
     },
      
     selecteffort: function(px, py, sesource)
     {
-        quantshowshow("SELECT"+px+" "+py+" "+sesource); 
+        quantshowshow("SELECT("+px+","+py+") "+sesource); 
         this.selectposx = (px/window.innerWidth)*2 - 1; 
         this.selectposy = -(py/window.innerHeight)*2 + 1; 
         this.pickray.setFromCamera({x:this.selectposx, y:this.selectposy}, camera); 
@@ -112,11 +129,31 @@ var PickingObject = {
         this.selectbatchproc(); 
     }, 
 
-    setselectedindex: function(selectedvsvxcaveindex)
+    setselectedblock: function(blockname)
     {
-        centrelinematerial.uniforms.selectedvsvxcaveindex.value = selectedvsvxcaveindex; 
-        PlotGeometryObject.enttrianglematerial.uniforms.selectedvsvxcaveindex.value = selectedvsvxcaveindex; 
+        var bselindexlo = 0; 
+        while ((bselindexlo < svx3d.blocknames.length) && (svx3d.blocknames[bselindexlo] != blockname))
+            bselindexlo++; 
+        var bselindexhi = bselindexlo; 
+        while ((bselindexhi < svx3d.blocknames.length) && (svx3d.blocknames[bselindexhi] == blockname))
+            bselindexhi++; 
+            
+        PlotGeometryObject.centrelinematerial.uniforms.selindexlo.value = svx3d.legblockstarts[bselindexlo]; 
+        PlotGeometryObject.centrelinematerial.uniforms.selindexhi.value = svx3d.legblockstarts[bselindexhi]; 
+
+console.log("setselblock ", blockname, bselindexlo, bselindexhi, svx3d.legblockstarts[bselindexlo], svx3d.legblockstarts[bselindexhi]); 
+        var bselxsecindexlo = svx3d.xsectblockstarts[bselindexlo]; 
+        var bselxsecindexhi = svx3d.xsectblockstarts[bselindexhi]; 
+        PlotGeometryObject.passagetubematerial.uniforms.selindexlo.value = (bselxsecindexlo != 0 ? svx3d.cumupassagexcsseq[bselxsecindexlo - 1] : 0); 
+        PlotGeometryObject.passagetubematerial.uniforms.selindexhi.value = (bselxsecindexhi != 0 ? svx3d.cumupassagexcsseq[bselxsecindexhi - 1] : 0); 
+console.log("selxsec ", bselxsecindexlo, bselxsecindexhi, PlotGeometryObject.passagetubematerial.uniforms.selindexlo.value, PlotGeometryObject.passagetubematerial.uniforms.selindexhi.value); 
+
+        // PlotGeometryObject.enttrianglematerial.uniforms.selectedvsvxcaveindex.value = selectedvsvxcaveindex; 
         //for (var i = 0; i < textlabelmaterials.length; i++) 
         //    textlabelmaterials[i].uniforms.closedist.value = closedistvalue; 
     }
+    
 }; 
+
+
+

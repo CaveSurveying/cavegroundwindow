@@ -21,6 +21,7 @@ var PlotGeometryObject =
     enttrianglematerial: null,
     entgeometry: null, 
     entlabelscard: null, 
+    entriangles: null,
 
     passagetubematerial: null,
     passagetubes: null, 
@@ -44,7 +45,6 @@ var PlotGeometryObject =
                         aspect: { type: 'f', value: 1.0 },
                         textureaspect: { type: 'f', value: canvas1.width/canvas1.height }, 
                         texture: { value: texture1 },
-                        closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
                         closedist: { type: 'f', value: 5.0 },  
                         redalt: { type: 'f', value: this.redalt },
                         vfac: { type: 'f', value: this.vfac } 
@@ -108,9 +108,9 @@ var PlotGeometryObject =
     LoadCentrelines: function(legnodes, legindexes, svxscaleInv)
     {
         this.centrelinematerial = new THREE.ShaderMaterial({
-            uniforms: { closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
-                        closedist: { type: 'f', value: 5.0 }, 
-                        selectedvsvxcaveindex: { type: 'f', value: -1.0 }, 
+            uniforms: { closedist: { type: 'f', value: 5.0 }, 
+                        selindexlo: { type: 'f', value: -1.0 }, 
+                        selindexhi: { type: 'f', value: -1.0 }, 
                         redalt: { type: 'f', value: this.redalt },
                         vfac: { type: 'f', value: this.vfac } 
                       }, 
@@ -123,7 +123,7 @@ var PlotGeometryObject =
         var nlegs = legindexes.length/2; 
         var centrelinepositionsbuff = new THREE.BufferAttribute(new Float32Array(nlegs*2*3), 3);
         var cosslope = new Float32Array(nlegs*2); 
-        var svxcaveindex = new Float32Array(nlegs*2); 
+        var legindex = new Float32Array(nlegs*2); 
 
         for (var i = 0; i < nlegs; i++) {
             var i0 = legindexes[i*2]*3; 
@@ -137,6 +137,9 @@ var PlotGeometryObject =
             var lcosslope = Math.cos(Math.atan2(dy, Math.sqrt(dx*dx + dz*dz))); 
             cosslope[i*2] = lcosslope; 
             cosslope[i*2+1] = lcosslope; 
+            
+            legindex[i*2] = i; 
+            legindex[i*2+1] = i; 
             
             if ((i == 0) || (this.altminF > legnodes[i0+2]))
                 this.altminF = legnodes[i0+2]; 
@@ -154,7 +157,7 @@ var PlotGeometryObject =
         this.centrelinebuffergeometry = new THREE.BufferGeometry(); 
         this.centrelinebuffergeometry.addAttribute('position', centrelinepositionsbuff);
         this.centrelinebuffergeometry.addAttribute('cosslope', new THREE.BufferAttribute(cosslope, 1)); 
-        this.centrelinebuffergeometry.addAttribute('svxcaveindex', new THREE.BufferAttribute(svxcaveindex, 1)); 
+        this.centrelinebuffergeometry.addAttribute('legindex', new THREE.BufferAttribute(legindex, 1)); 
 
         this.centrelines = new THREE.LineSegments(this.centrelinebuffergeometry, this.centrelinematerial);  
         this.scene.add(this.centrelines); 
@@ -166,18 +169,18 @@ var PlotGeometryObject =
         var nentrances = legentrances.length/2; 
         var entpositionbuff = new THREE.BufferAttribute(new Float32Array(nentrances*9), 3); 
         var entcorner = new Float32Array(nentrances*3); 
-        var svxcaveindex = new Float32Array(nentrances*3); 
+        var entindex = new Float32Array(nentrances*3); 
         
         this.entgeometry = new THREE.BufferGeometry(); 
         this.entgeometry.addAttribute('position', entpositionbuff); 
         this.entgeometry.addAttribute('pcorner', new THREE.BufferAttribute(entcorner, 1)); 
-        this.entgeometry.addAttribute('svxcaveindex', new THREE.BufferAttribute(svxcaveindex, 1)); 
+        //this.entgeometry.addAttribute('entindex', new THREE.BufferAttribute(legindex, 1)); 
         this.enttrianglematerial = new THREE.ShaderMaterial({
             uniforms: { trianglesize: {type: 'f', value: 10.0}, 
                         aspect: { type: 'f', value: 1.0 }, 
-                        closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
                         closedist: { type: 'f', value: 5.0 }, 
-                        selectedvsvxcaveindex: { type: 'f', value: -1.0 }, 
+                        selindexlo: { type: 'f', value: -1.0 }, 
+                        selindexhi: { type: 'f', value: -1.0 }, 
                         redalt: { type: 'f', value: this.redalt },
                         vfac: { type: 'f', value: this.vfac } 
                       }, 
@@ -186,8 +189,8 @@ var PlotGeometryObject =
             depthWrite:true, depthTest:true, 
             side: THREE.DoubleSide
         }); 
-        enttriangles = new THREE.Mesh(this.entgeometry, this.enttrianglematerial);  
-        scene.add(enttriangles); 
+        this.enttriangles = new THREE.Mesh(this.entgeometry, this.enttrianglematerial);  
+        scene.add(this.enttriangles); 
 
         this.entlabelscard = new THREE.Object3D();
         for (var i = 0; i < nentrances; i++) {
@@ -197,7 +200,7 @@ var PlotGeometryObject =
             entpositionbuff.setXYZ(i*3, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+1, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+2, p.x, p.y, p.z); 
             entcorner[i*3] = 0.0;  entcorner[i*3+1] = 1.0;  entcorner[i*3+2] = 2.0; 
             //svxcaveindex[i*3] = svxents[i][4];  svxcaveindex[i*3+1] = svxents[i][4];  svxcaveindex[i*3+2] = svxents[i][4]; 
-            svxcaveindex[i*3] = 0;  svxcaveindex[i*3+1] = 0;  svxcaveindex[i*3+2] = 0; 
+            //svxcaveindex[i*3] = 0;  svxcaveindex[i*3+1] = 0;  svxcaveindex[i*3+2] = 0; 
             
             if (true || (legentrances[i*2+1].match(/p\d+[a-z]?$/) !== null)) {
                 this.MakeLabel(this.entlabelscard, legentrances[i*2+1], "rgba(0,200,200,0.95)", p, 0.5);  // rgba(0,200,200,0.95)
@@ -206,15 +209,14 @@ var PlotGeometryObject =
         this.scene.add(this.entlabelscard);
     },
 
-    LoadPassageTubesP: function(passagexcsseq, xcs, svxscaleInv) 
+    LoadPassageTubesP: function(cumupassagexcsseq, xcs, svxscaleInv) 
     {
-        var nxcs = 0; 
-        for (var j = 0; j < passagexcsseq.length; j++)
-            nxcs += passagexcsseq[j]; 
+        var nxcs = cumupassagexcsseq[cumupassagexcsseq.length - 1]; 
         console.assert(xcs.length == nxcs*3*4); 
         this.passagetubematerial = new THREE.ShaderMaterial({
-            uniforms: { closecolour: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, 1.0) }, 
-                        closedist: { type: 'f', value: 5.0 },  
+            uniforms: { closedist: { type: 'f', value: 5.0 },  
+                        selindexlo: { type: 'f', value: -1.0 }, 
+                        selindexhi: { type: 'f', value: -1.0 }, 
                         redalt: { type: 'f', value: this.redalt },
                         vfac: { type: 'f', value: this.vfac } 
                       }, 
@@ -227,11 +229,13 @@ var PlotGeometryObject =
         var nnodes = xcs.length/3; 
         var flatfaceattributes = new Float32Array(nnodes*4); 
         var ssgvertbuff = new THREE.Float32Attribute(new Float32Array(nnodes*3), 3); 
+        var passageindex = new Float32Array(nnodes); 
         for (var i = 0; i < nnodes; i++) {
             ssgvertbuff.setXYZ(i, -xcs[i*3]*svxscaleInv, xcs[i*3+2]*svxscaleInv, xcs[i*3+1]*svxscaleInv); 
+            passageindex[i] = i/4|0;  // int value for index of the xsection
         }
         
-        var ntris = (4*nxcs - 2*passagexcsseq.length)*2; // 4 quads between pairs of xcs plus endcaps
+        var ntris = (4*nxcs - 2*cumupassagexcsseq.length)*2; // 4 quads between pairs of xcs plus endcaps
         var indices = new Uint16Array(ntris*3); 
         
         var iquad = 0; 
@@ -259,10 +263,12 @@ var PlotGeometryObject =
             }
             iquad++; 
         }
-        var k = 0; 
-        for (var j = 0; j < passagexcsseq.length; j++) {
+        
+        for (var j = 0; j < cumupassagexcsseq.length; j++) {
+            var k = (j != 0 ? cumupassagexcsseq[j-1] : 0)*4; 
+            var passagexcsseqj = cumupassagexcsseq[j] - (j != 0 ? cumupassagexcsseq[j-1] : 0); 
             AddQuad(k+0, k+1, k+2, k+3, 2); 
-            for (var l = 0; l < passagexcsseq[j]-1; l++) {
+            for (var l = 0; l < passagexcsseqj-1; l++) {
                 k += 4; 
                 var l1 = (l%2 + 1)*(Math.floor(l/2)%2 == 0?1:-1);
                 var l2 = (l%2 + 3)*(Math.floor(l/2)%2 == 0?1:-1);
@@ -271,16 +277,16 @@ var PlotGeometryObject =
                 AddQuad(k+2, k+3, k-4+3, k-4+2, -l1);
                 AddQuad(k+3, k+0, k-4+0, k-4+3, -l2);
             }
-            AddQuad(k+3, k+2, k+1, k+0, (passagexcsseq[j]%2 + 2)); 
+            AddQuad(k+3, k+2, k+1, k+0, (passagexcsseqj%2 + 2)); 
             k += 4; 
         }
-        console.assert(iquad == (4*nxcs - 2*passagexcsseq.length)); 
-        console.assert(k == 4*nxcs); 
+        console.assert(iquad == (4*nxcs - 2*cumupassagexcsseq.length)); 
         
         var buffergeometry = new THREE.BufferGeometry(); 
         buffergeometry.setIndex(new THREE.BufferAttribute(indices, 1)); 
         buffergeometry.addAttribute('position', ssgvertbuff);
-        buffergeometry.addAttribute('flat4', new THREE.Float32Attribute(flatfaceattributes, 4)); 
+        buffergeometry.addAttribute('flat4', new THREE.Float32Attribute(flatfaceattributes, 4));  // goes into vec4
+        buffergeometry.addAttribute('passageindex', new THREE.Float32Attribute(passageindex, 1)); 
 
         //this.passagetubematerial = new THREE.MeshBasicMaterial({ color: 0xDD44EE, shading: THREE.FlatShading, depthWrite:true, depthTest:true }); 
         this.passagetubes = new THREE.Mesh(buffergeometry, this.passagetubematerial);  

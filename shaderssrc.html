@@ -1,10 +1,13 @@
   <script id="fragment_shader_passage" type="x-shader/x-fragment">
-uniform float redalt; // deltph shading colours
-uniform float vfac; 
-uniform vec4 closecolour; 
 uniform float closedist; 
-varying vec4 vflat4; 
+uniform float selindexlo; 
+uniform float selindexhi; 
+uniform float redalt; 
+uniform float vfac; 
+
 varying float altitude; 
+varying vec4 vflat4; 
+varying float vindex; 
 float midlump(float v, float offset) 
 {
     float lv = (mod(v*vfac + offset, 1.0) - 0.5)/0.5; 
@@ -13,21 +16,34 @@ float midlump(float v, float offset)
 void main(void) 
 {
     gl_FragColor = vec4(midlump(altitude, redalt), midlump(altitude, redalt-0.667)*0.98, midlump(altitude, redalt-0.333), 1.0); 
+
+    // close colour whitening
+    vec4 closecolour = vec4(1.0, 1.0, 1.0, 1.0); 
     float fdepth = gl_FragCoord.z / gl_FragCoord.w; 
     float cfac = clamp((closedist - fdepth)*0.1, 0.0, 0.81); 
-    float flatfac = max(0.0, max(max(abs(vflat4.x), abs(vflat4.y)), max(abs(vflat4.z), abs(vflat4.w))) - 510.0); 
     gl_FragColor = mix(gl_FragColor, closecolour, cfac); 
+    
+    // magic flat face colour setting technology
+    float flatfac = max(0.0, max(max(abs(vflat4.x), abs(vflat4.y)), max(abs(vflat4.z), abs(vflat4.w))) - 510.0); 
     gl_FragColor = mix(gl_FragColor, vec4(0.0, 0.0, 0.0, 1.0), flatfac); 
+
+    // selection condition
+    if ((selindexlo <= vindex) && (vindex < selindexhi))
+        gl_FragColor = mix(gl_FragColor, vec4(0.0, 1.0, 1.0, 1.0), 0.75); 
 }
   </script>
+  
   <script id="vertex_shader_passage" type="x-shader/x-vertex">
 varying float altitude; 
 varying vec4 vflat4; 
+varying float vindex; 
 attribute vec4 flat4; 
+attribute float passageindex; 
 void main()
 {
     altitude = position.y; 
     vflat4 = flat4; 
+    vindex = passageindex; 
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
     gl_Position = projectionMatrix * mvPosition; 
 }
@@ -37,14 +53,15 @@ void main()
 
 
   <script id="fragment_shader_centreline" type="x-shader/x-fragment">
-uniform vec4 closecolour; 
 uniform float closedist; 
-uniform float selectedvsvxcaveindex; 
+uniform float selindexlo; 
+uniform float selindexhi; 
 uniform float redalt; 
 uniform float vfac; 
+
 varying float altitude; 
 varying float vcosslope; 
-varying float vsvxcaveindex; 
+varying float vindex; 
 float midlump(float v, float offset) 
 {
     float lv = (mod(v*vfac + offset, 1.0) - 0.5)/0.5; 
@@ -52,28 +69,34 @@ float midlump(float v, float offset)
 }
 void main(void) 
 {
-    vec4 ptcolour = vec4(midlump(altitude, redalt), midlump(altitude, redalt-0.667)*0.98, midlump(altitude, redalt-0.333), 1.0); 
-    vec4 sptcolour = mix(ptcolour, vec4(0.0, 0.0, 0.0, 1.0), 0.6*(1.0-vcosslope)); 
+    gl_FragColor = vec4(midlump(altitude, redalt), midlump(altitude, redalt-0.667)*0.98, midlump(altitude, redalt-0.333), 1.0); 
+    
+    // darken steep sections
+    gl_FragColor = mix(gl_FragColor, vec4(0.0, 0.0, 0.0, 1.0), 0.6*(1.0-vcosslope));  
+    
+    // close colour whitening
+    vec4 closecolour = vec4(1.0, 1.0, 1.0, 1.0); 
     float fdepth = gl_FragCoord.z / gl_FragCoord.w; 
     float cfac = clamp((closedist - fdepth)*0.1, 0.0, 0.81); 
-    if (vsvxcaveindex == selectedvsvxcaveindex)
-        gl_FragColor = mix(sptcolour, vec4(0.0, 1.0, 1.0, 1.0), 0.8); 
-    else
-        gl_FragColor = mix(sptcolour, closecolour, cfac); 
+    gl_FragColor = mix(gl_FragColor, closecolour, cfac); 
+    
+    // selection condition
+    if ((selindexlo <= vindex) && (vindex < selindexhi))
+        gl_FragColor = mix(gl_FragColor, vec4(0.0, 1.0, 1.0, 1.0), 0.8); 
 }
   </script>
   <script id="vertex_shader_centreline" type="x-shader/x-vertex">
 attribute float cosslope; 
-attribute float svxcaveindex; 
+attribute float legindex; 
 varying float altitude; 
 varying float vcosslope; 
-varying float vsvxcaveindex; 
+varying float vindex; 
 void main()
 {
     altitude = position.y; 
     vcosslope = cosslope; 
-    vsvxcaveindex = svxcaveindex;  
-    vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+    vindex = legindex;  
+    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
     gl_Position = projectionMatrix * mvPosition; 
 }
   </script>
@@ -81,7 +104,6 @@ void main()
 
 
   <script id="fragment_shader_textlabel" type="x-shader/x-fragment">
-uniform vec4 closecolour; 
 uniform float closedist; 
 uniform sampler2D texture;
 varying vec2 vUv;
@@ -91,12 +113,13 @@ void main()
     vec3 color = texture2D(texture, uv).rgb;
     if (color.y == 0.0)
         discard; 
-    vec4 sptcolour = vec4(color, 1.0);
+    gl_FragColor = vec4(color, 1.0);
 
     // color.y >= 0.5 separates out the aliased dark part of the text texture from the internal pixels of the letters
+    vec4 closecolour = vec4(1.0, 1.0, 1.0, 1.0); 
     float fdepth = gl_FragCoord.z / gl_FragCoord.w; 
     float cfac = clamp((closedist - fdepth)*0.1, 0.0, 0.81); 
-    gl_FragColor = mix(sptcolour, closecolour, (color.y >= 0.5 ? cfac : 0.0)); 
+    gl_FragColor = mix(gl_FragColor, closecolour, (color.y >= 0.5 ? cfac : 0.0)); 
 }
   </script>
   
@@ -153,15 +176,15 @@ void main()
 uniform float trianglesize; 
 uniform float aspect; 
 attribute float pcorner; 
-attribute float svxcaveindex; 
+attribute float svxlegindex; 
 varying float altitude; 
 varying float vcosslope; 
-varying float vsvxcaveindex; 
+varying float vindex; 
 void main()
 {
     altitude = position.y; 
     vcosslope = 1.0; 
-    vsvxcaveindex = svxcaveindex; 
+    vindex = -1.0; 
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
     gl_Position = projectionMatrix * mvPosition; 
     float strianglesize = trianglesize*gl_Position.z*10.0; 

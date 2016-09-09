@@ -7,26 +7,26 @@ python ../survexprocessing/parse3ddmp.py --js=leckfell.js --svx=/home/goatchurch
 
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
-// * cave section labelling (by hierarchy)
+// * selected attribute onto passagetubes and indexed
+// * cave entrance to blockname mapping
+// * mapping to blockname to cave entrance selection
+// * mapping to blockname to cave entrance label selection
+// * make selection value blink occasionally
+
+// * build/deploy script (copies to goatchurch.io and to phone)
+// * vertex_shader_enttriangle to attribute float svxlegindex attribute set LoadEntrances as entindex
 // * move more code into JS files
-// * parallel lists for the index points in each
-// * relative to main cave loading thing
+// * light up the entrance labels that match as well
 
 // * unhosted.org
 
 // * do Philip's conversion stuff
 // * conversion code to note multiple node names for a node
-// * why isn't the touch screen working on computer?
 
-// * provide an offset and digit rounding to the java file to shorten it
 // * separate makefiles for the svx on loser and on leckfell
 // * other peaks in view into database (put them into the svx files as visible peaks if possible???)
 // * provide option of which cave data to load
-// * make the camera view slightly faded (would require specual shader rather that basicmaterial)
-// * break file into different javascript files
-// * derive length and depth when plotting a cave 
-// * light up the entrance labels that match as well
-// * picking of cave passage as well
+// * make the camera view slightly faded (would require special shader rather that basicmaterial)
 // * small hops and sideways hops (in relation to the screen, poss using the accelerometer)
 // * Rauchercan data -- can't find
 // * do the mag check early on on startup
@@ -34,6 +34,7 @@ adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
 
 // DONE
+// * provide an offset and digit rounding to the java file to shorten it
 // * light should minimum be 10m
 // * ability to select different js files of data
 // * put entrance triangles back in (and have them converted from the 3d processing)

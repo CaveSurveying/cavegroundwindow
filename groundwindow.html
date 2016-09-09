@@ -222,7 +222,12 @@ function quantshowhide()
     }
 }
 
-function quantshowhidedelay(dt)  { if (quantshowhidetimeout === null)  quantshowhidetimeout = setTimeout(quantshowhide, dt);  }
+function quantshowhidedelay(dt)  
+{
+    if (quantshowhidetimeout !== null)
+        clearTimeout(quantshowhidetimeout);  
+    quantshowhidetimeout = setTimeout(quantshowhide, dt);  
+}
 function quantshowshow(qtext)  
 { 
     if (quantshowhidetimeout !== null) {
@@ -277,8 +282,8 @@ function init()
     light.position.set(0, 2500, 0);
     scene.add(light);
 
-    if (svx3d.passagexcsseq !== undefined)
-        PlotGeometryObject.LoadPassageTubesP(svx3d.passagexcsseq, svx3d.passagexcs, 1.0/svx3d.scale); // before centrelines because they overwrite in the depth buffer
+    if (svx3d.cumupassagexcsseq !== undefined)
+        PlotGeometryObject.LoadPassageTubesP(svx3d.cumupassagexcsseq, svx3d.passagexcs, 1.0/svx3d.scale); // before centrelines because they overwrite in the depth buffer
     if (svx3d.landmarks !== undefined)
         PlotGeometryObject.LoadMountains(svx3d.landmarks, 1.0/svx3d.scale); 
         
@@ -337,6 +342,8 @@ function LoadSvx3d(lsvx3d)
 {
     svx3d = lsvx3d; 
     svx3d.scaleInv = 1.0/svx3d.scale; 
+    svx3d.nlegs = svx3d.legindexes.length/2; 
+    svx3d.nentrances = svx3d.legentrances.length/2; 
 
     init();
     if (svx3d.latp0 !== undefined) {
@@ -370,6 +377,7 @@ function LoadSvx3dList(lsvx3dlist)
 
 initelements(); 
 LoadScript('svx3dlist.js'); 
+
 
 
 // add GPS reader to this or do fake positions

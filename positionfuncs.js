@@ -290,3 +290,13 @@ function fakegpsgenerator()
         setTimeout(fakegpsgenerator, 100); 
 } 
 
+var iblocknamego = 0; 
+function callbacknextblock() 
+{
+    if (iblocknamego < svx3d.blocknames.length) {
+        console.log(iblocknamego, svx3d.blocknames[iblocknamego]); 
+        PickingObject.setselectedblock(svx3d.blocknames[iblocknamego]); 
+        iblocknamego++; 
+        setTimeout(callbacknextblock, 300); 
+    }
+}

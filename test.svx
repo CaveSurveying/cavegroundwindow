@@ -33,11 +33,6 @@ X  9 5       0      45
 X  E 40      45     20
 *entrance E
 
-*entrance 2
-*entrance 3
-
-
-
 *data passage station left right up down
 1 5 5 2 2
 2 6 6 8 2 
@@ -61,5 +56,19 @@ X west5 20000 270 0
 *equate south5 landmark_south5
 *equate east5 landmark_east5
 *equate west5 landmark_west5
+
+*equate lower.Q  5
+*begin lower
+*flags not surface
+*export Q
+Q  1 10 0   0
+1  2 10 90  0
+2  3 10 180 0
+3  Q 10 270 0
+*data passage station left right up down
+1   1 1 2 2 
+2   2 2 1 1
+
+*end lower
 
 *end test
