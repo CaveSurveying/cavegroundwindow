@@ -136,11 +136,14 @@ var PickingObject = {
 
     setselectedblock: function(blockname)
     {
+        var blocknamedot = blockname+"."; 
+        var matchblockname = function(bn) { return ((bn == blockname) || (bn.substring(0, blocknamedot.length) == blocknamedot)); }
+            
         var bselindexlo = 0; 
-        while ((bselindexlo < svx3d.blocknames.length) && (svx3d.blocknames[bselindexlo] != blockname))
+        while ((bselindexlo < svx3d.blocknames.length) && !matchblockname(svx3d.blocknames[bselindexlo]))
             bselindexlo++; 
         var bselindexhi = bselindexlo; 
-        while ((bselindexhi < svx3d.blocknames.length) && (svx3d.blocknames[bselindexhi] == blockname))
+        while ((bselindexhi < svx3d.blocknames.length) && matchblockname(svx3d.blocknames[bselindexhi]))
             bselindexhi++; 
             
         PlotGeometryObject.centrelinematerial.uniforms.selindexlo.value = svx3d.legblockstarts[bselindexlo]; 

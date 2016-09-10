@@ -1,12 +1,15 @@
 http://tinyurl.com/jzjxvmu  is http://goatchurchprime.github.io/cardboardlike/groundwindow.html
 
 dump3d maxpleasure2.3d | ../survexprocessing/parse3ddmp.py -s --js=maxpleasure2.js 
-python ../survexprocessing/parse3ddmp.py --js=test.js --svx=test.svx
+python ../survexprocessing/parse3ddmp.py --js=test.js --svx=test.svx￼Q
 python ../survexprocessing/parse3ddmp.py --js=leckfell.js --svx=/home/goatchurch/caving/NorthernEngland/ThreeCountiesArea/survexdata/all.svx
 
 
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
+// * make selection of subblockname to happen
+// * then apply to cave entrance selection
+// * write a splash screen instructions list
 // * cave entrance to blockname mapping
 // * mapping to blockname to cave entrance selection
 // * mapping to blockname to cave entrance label selection
