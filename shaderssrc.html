@@ -106,6 +106,8 @@ void main()
   <script id="fragment_shader_textlabel" type="x-shader/x-fragment">
 uniform float closedist; 
 uniform sampler2D texture;
+uniform float bselindex; 
+
 varying vec2 vUv;
 void main() 
 {
@@ -120,6 +122,8 @@ void main()
     float fdepth = gl_FragCoord.z / gl_FragCoord.w; 
     float cfac = clamp((closedist - fdepth)*0.1, 0.0, 0.81); 
     gl_FragColor = mix(gl_FragColor, closecolour, (color.y >= 0.5 ? cfac : 0.0)); 
+    if (bselindex == 1.0)
+        gl_FragColor = mix(gl_FragColor, vec4(0.0, 1.0, 1.0, 1.0), 0.8); 
 }
   </script>
   
@@ -176,7 +180,7 @@ void main()
 uniform float trianglesize; 
 uniform float aspect; 
 attribute float pcorner; 
-attribute float svxlegindex; 
+attribute float entindex; 
 varying float altitude; 
 varying float vcosslope; 
 varying float vindex; 
@@ -184,7 +188,7 @@ void main()
 {
     altitude = position.y; 
     vcosslope = 1.0; 
-    vindex = -1.0; 
+    vindex = entindex;  
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
     gl_Position = projectionMatrix * mvPosition; 
     float strianglesize = trianglesize*gl_Position.z*10.0; 

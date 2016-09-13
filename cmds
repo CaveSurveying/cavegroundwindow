@@ -7,11 +7,10 @@ python ../survexprocessing/parse3ddmp.py --js=leckfell.js --svx=/home/goatchurch
 
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
+// 
+// * ability to reselect outer subblockname
 // * make selection of subblockname to happen
-// * then apply to cave entrance selection
 // * write a splash screen instructions list
-// * cave entrance to blockname mapping
-// * mapping to blockname to cave entrance selection
 // * mapping to blockname to cave entrance label selection
 // * make selection value blink occasionally
 
@@ -36,6 +35,9 @@ adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
 
 // DONE
+// * cave entrance to blockname mapping
+// * mapping to blockname to cave entrance selection
+// * then apply to cave entrance selection
 // * selected attribute onto passagetubes and indexed
 // * provide an offset and digit rounding to the java file to shorten it
 // * light should minimum be 10m

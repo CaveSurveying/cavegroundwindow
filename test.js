@@ -1,4 +1,4 @@
-LoadSvx3d({"title":"test", "date":"2016-09-09 18:18:54",
+LoadSvx3d({"title":"test", "date":"2016-09-13 17:44:34",
     "scale": 100.000000,
     "p0": [32275158,476682358,42368],
     "cs": "+proj=utm +ellps=WGS84 +datum=WGS84 +units=m +zone=31 +no_defs",

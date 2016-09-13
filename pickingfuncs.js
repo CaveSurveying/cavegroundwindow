@@ -116,7 +116,7 @@ var PickingObject = {
                 quantshowtextelement.textContent = "Block of: "+blockname; 
             quantshowhidedelay(5000); 
         }
-        this.setselectedblock(blockname); 
+        this.setselectedblock(selblockname); 
     },
      
     selecteffort: function(px, py, sesource)
@@ -157,9 +157,27 @@ console.log("setselblock ", blockname, bselindexlo, bselindexhi, svx3d.legblocks
             PlotGeometryObject.passagetubematerial.uniforms.selindexhi.value = (bselxsecindexhi != 0 ? svx3d.cumupassagexcsseq[bselxsecindexhi - 1] : 0); 
 console.log("selxsec ", bselxsecindexlo, bselxsecindexhi, PlotGeometryObject.passagetubematerial.uniforms.selindexlo.value, PlotGeometryObject.passagetubematerial.uniforms.selindexhi.value); 
         }
-        // PlotGeometryObject.enttrianglematerial.uniforms.selectedvsvxcaveindex.value = selectedvsvxcaveindex; 
-        //for (var i = 0; i < textlabelmaterials.length; i++) 
-        //    textlabelmaterials[i].uniforms.closedist.value = closedistvalue; 
+        
+        if (svx3d.legentrances !== undefined) {
+            var bentselindexlo = 0; 
+            while ((bentselindexlo < svx3d.nentrances) && !matchblockname(svx3d.legentrances[bentselindexlo*3+2]))
+                bentselindexlo++; 
+            var bentselindexhi = bentselindexlo; 
+console.log("entsec", bentselindexlo); 
+            while ((bentselindexhi < svx3d.nentrances) && matchblockname(svx3d.legentrances[bentselindexhi*3+2]))
+                bentselindexhi++;
+console.log("entsec", bentselindexlo, bentselindexhi); 
+            if ((bentselindexlo < svx3d.nentrances) && (svx3d.legentrances[bentselindexlo*3+2] == "")) {
+                console.log("no matching blockname for this entrance"); 
+                bentselindexlo = -1; bentselindexhi = -1
+            }
+            PlotGeometryObject.enttrianglematerial.uniforms.selindexlo.value = bentselindexlo; 
+            PlotGeometryObject.enttrianglematerial.uniforms.selindexhi.value = bentselindexhi; 
+        }
+        
+        for (var i = 0; i < svx3d.nentrances; i++) 
+            PlotGeometryObject.textlabelmaterials[i+svx3d.landmarks.length].uniforms.bselindex.value = (((i >= bentselindexlo) && (i < bentselindexhi)) ? 1.0 : 0.0); 
+
     }
     
 }; 

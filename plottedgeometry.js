@@ -46,7 +46,8 @@ var PlotGeometryObject =
                         textureaspect: { type: 'f', value: canvas1.width/canvas1.height }, 
                         texture: { value: texture1 },
                         closedist: { type: 'f', value: 5.0 },  
-                        redalt: { type: 'f', value: this.redalt },
+                        bselindex: { type: 'f', value: 0.0 },
+                        redalt: { type: 'f', value: this.redalt },   // shouldn't be here
                         vfac: { type: 'f', value: this.vfac } 
                       }, 
             vertexShader: getshader('vertex_shader_textlabel'),
@@ -174,7 +175,7 @@ var PlotGeometryObject =
         this.entgeometry = new THREE.BufferGeometry(); 
         this.entgeometry.addAttribute('position', entpositionbuff); 
         this.entgeometry.addAttribute('pcorner', new THREE.BufferAttribute(entcorner, 1)); 
-        //this.entgeometry.addAttribute('entindex', new THREE.BufferAttribute(legindex, 1)); 
+        this.entgeometry.addAttribute('entindex', new THREE.BufferAttribute(entindex, 1)); 
         this.enttrianglematerial = new THREE.ShaderMaterial({
             uniforms: { trianglesize: {type: 'f', value: 10.0}, 
                         aspect: { type: 'f', value: 1.0 }, 
@@ -194,17 +195,13 @@ var PlotGeometryObject =
 
         this.entlabelscard = new THREE.Object3D();
         for (var i = 0; i < nentrances; i++) {
-            var i1 = legentrances[i*3+0]*3; 
+            var i1 = legentrances[i*3+0]*3;  // node index
             var x1 = -legnodes[i1]*svxscaleInv, y1=legnodes[i1+2]*svxscaleInv, z1=legnodes[i1+1]*svxscaleInv; 
             var p = {x:x1, y:y1, z:z1}; 
             entpositionbuff.setXYZ(i*3, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+1, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+2, p.x, p.y, p.z); 
             entcorner[i*3] = 0.0;  entcorner[i*3+1] = 1.0;  entcorner[i*3+2] = 2.0; 
-            //svxcaveindex[i*3] = svxents[i][4];  svxcaveindex[i*3+1] = svxents[i][4];  svxcaveindex[i*3+2] = svxents[i][4]; 
-            //svxcaveindex[i*3] = 0;  svxcaveindex[i*3+1] = 0;  svxcaveindex[i*3+2] = 0; 
-            
-            if (true || (legentrances[i*3+1].match(/p\d+[a-z]?$/) !== null)) {
-                this.MakeLabel(this.entlabelscard, legentrances[i*2+1], "rgba(0,200,200,0.95)", p, 0.5);  // rgba(0,200,200,0.95)
-            }
+            entindex[i*3] = i; entindex[i*3+1] = i; entindex[i*3+2] = i;
+            this.MakeLabel(this.entlabelscard, legentrances[i*3+1], "rgba(0,200,200,0.95)", p, 0.5);  // rgba(0,200,200,0.95)
         }
         this.scene.add(this.entlabelscard);
     },
