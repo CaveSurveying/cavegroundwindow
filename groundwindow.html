@@ -7,17 +7,21 @@
     <style>
       body { margin: 0px; overflow: hidden; }
       #viz { position: absolute; top: 0; left: 0; right: 0; bottom: 0; }
-      #quantbutton { position: absolute; right:0; top: 0; border: thin red solid; background:#ddf; display: block }
+      #quantbutton { position: absolute; right:0; top: 0; border: thin red solid; background:#ddf; display: none }
       #quantshow { position: absolute; right:0; top: 0; width: 75%; border: thin red solid; background:#fdd; display: none }
       #quantshowtext { font-size: 200%; position: relative; left: 0; top: 0; display: none }
       input.selected { background-color: #8e8; } 
       #postext { position: relative; left: 0; top: 0; display: block }
-      #postext input, #quantbutton input { font-size: 150%}
+      #postext input, #quantbutton input { font-size: 150%} 
       #dcamara { position: absolute; left: 0; bottom: 0; width:50%; height:50%; display: none; background: red }
       #camara { width:100%; height:100%; }
       #choicesplash { position: relative; background-color: #fcc; margin-left:auto; margin-right:auto; margin-top:10%; width:80%; display:block; text-align:center; }
       #choicejs { list-style-type: none; padding-left:0; font-size: 150% }
-      #choicejs a:hover { color: blue; font-weight: bold }
+      #choicejs a:hover { color: blue; font-weight: bold; cursor: pointer }
+      #blocknamessplash { position: relative; background-color: #cfc; margin-left:auto; margin-right:auto; margin-top:10%; width:80%; height: 200px; text-align:left; overflow: scroll; display: none }
+      #listblocknames { margin:0px; padding:0px; border:thin black solid; }
+      #listblocknames li { white-space:pre; }
+      
     </style>
     <link rel="manifest" href="manifest.json">
     <script src="three.min.js"></script>
@@ -61,6 +65,13 @@
           <ul id="choicejs">
           </ul>
       </div>
+      <div id="blocknamessplash">
+          <ul id="listblocknames">
+          </ul>
+      </div>
+      <div id="instructionssplash">
+          <h2>Some belated instructions</h2>
+      </div>
       <div id="dcamara">
         <video id="camara" autoplay controls></video>
       </div>
@@ -100,51 +111,6 @@ function HighTopView()
 }
 
 var quantshowelement, quantshowtextelement, postextelement; 
-
-var backgroundscene = null, backgroundcamera = null; 
-var videotexture; 
-var backgroundvideo = null; 
-var backgroundcamerascale = 1.67; // may need different scale on y and x or by aspect ratio of something
-window.URL = window.URL || window.webkitURL; 
-navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia; 
-var bshowvideobackground = false; 
-function LoadVideoBackground()
-{
-    if (bshowvideobackground) {
-        bshowvideobackground = false; 
-        document.getElementById("backcamera").className = ""; 
-        return; 
-    }
-    if (backgroundscene) {
-        bshowvideobackground = true; 
-        document.getElementById("backcamera").className = "selected"; 
-        return; 
-    }
-        
-    backgroundvideo = document.createElement("video"); 
-    backgroundvideo.width = vizcontainer.offsetWidth; 
-    backgroundvideo.height = vizcontainer.offsetHeight; 
-    backgroundvideo.autoplay = true; 
-    
-    navigator.getUserMedia({"audio":false, "video":true}, function(streamVideo) { 
-        backgroundvideo.src = window.URL.createObjectURL(streamVideo); 
-        //alert(backgroundvideo.src); 
-        videotexture = new THREE.Texture(backgroundvideo); 
-        var backgroundmesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2, 0), new THREE.MeshBasicMaterial({map: videotexture})); 
-        backgroundmesh.material.depthTest = false; 
-        backgroundmesh.material.depthWrite = false; 
-        backgroundscene = new THREE.Scene(); 
-        backgroundcamera = new THREE.Camera(); 
-        backgroundcamera.projectionMatrix.makeScale(backgroundcamerascale, backgroundcamerascale, backgroundcamerascale); 
-        backgroundscene.add(backgroundcamera); 
-        backgroundscene.add(backgroundmesh); 
-        bshowvideobackground = true; 
-        document.getElementById("backcamera").className = "selected"; 
-    }, function() { alert("bad camera"); }); 
-}
-
-
-
 
 
 function animate(t) 
@@ -220,9 +186,16 @@ var minlightdistance = 10;
 var fardistance = 70000; 
 function init() 
 {
+    document.getElementById("quantbutton").style.display = "block"; 
     PlotGraphics.init(); 
     window.addEventListener('keydown', function(event) { PokeUI.keydowncontrols(event); });
 
+    /*var listblocknames = document.getElementById('listblocknames'); 
+    for (var i = 0; i < svx3d.blocknames.length; i++) {
+        var li = document.createElement("li"); 
+        li.textContent = svx3d.blocknames[i]; 
+        listblocknames.appendChild(li); 
+    }*/
 
     if (svx3d.cumupassagexcsseq !== undefined)
         PlotGeometryObject.LoadPassageTubesP(svx3d.cumupassagexcsseq, svx3d.passagexcs, 1.0/svx3d.scale); // before centrelines because they overwrite in the depth buffer
@@ -247,7 +220,7 @@ function init()
         
     document.getElementById("camerahop").addEventListener("click", function() { PositionObject.ZhopGo(1500); }); 
     document.getElementById("reset31").addEventListener("click", reset31); 
-    document.getElementById("backcamera").addEventListener("click", LoadVideoBackground); 
+    document.getElementById("backcamera").addEventListener("click", function() { PlotGraphics.LoadVideoBackground(); }); 
     document.getElementById("magorientset").addEventListener("click", function(event) { event.preventDefault(); window.addEventListener('absolutedeviceorientation', tryabsoluteorient); }); 
     document.getElementById("highabove").addEventListener("click", HighTopView); 
     document.getElementById("draggsm").addEventListener("click", function(event) { event.preventDefault(); PokeUI.bdraggsmmode = !PokeUI.bdraggsmmode; document.getElementById("draggsm").className = (PokeUI.bdraggsmmode ? "selected" : ""); }); 
@@ -290,11 +263,11 @@ function LoadSvx3d(lsvx3d)
         svxview = svx3d; 
         PositionObject.geosetdirect(svx3d.lngp0, svx3d.latp0, svx3d.altp0, 0, 0);  
     }
-    
+    quantshowshow("Loaded: "+window.location.hash.substr(1)); 
     animate();
 }
 
-function AddSvx3dtolist(svxname, svxjs)
+function AddSvx3dtolist(svxname, svxjs, hashmatchlis)
 {
     var li = document.createElement("li"); 
     var a = document.createElement("a"); 
@@ -302,21 +275,28 @@ function AddSvx3dtolist(svxname, svxjs)
     li.addEventListener("click", function() { 
         document.getElementById('choicesplash').style.display = "none"; 
         quantshowshow("Loading "+svxjs); 
-        LoadScript(svxjs); 
+        window.location.hash = svxjs; 
+        LoadScript(svxjs); // this then callsback to LoadSvx3d()
     }); 
     li.appendChild(a); 
     document.getElementById('choicejs').appendChild(li); 
+    
+    if (window.location.hash.substr(1) == svxjs)
+        hashmatchlis.push(li); 
 }
 
 // callback from svx3dlist.js include file
 function LoadSvx3dList(lsvx3dlist)
 {
+    var hashmatchlis = [ ]; 
     for (var i = 0; i < lsvx3dlist.length; i++) 
-        AddSvx3dtolist(lsvx3dlist[i]["svxname"], lsvx3dlist[i]["svxjs"]); 
+        AddSvx3dtolist(lsvx3dlist[i]["svxname"], lsvx3dlist[i]["svxjs"], hashmatchlis); 
+    if (hashmatchlis.length != 0)
+        hashmatchlis[0].click(); 
 }
 
 initelements(); 
-LoadScript('svx3dlist.js');  
+LoadScript('svx3dlist.js');  // this then callsback to LoadSvx3dList()
 
 
 

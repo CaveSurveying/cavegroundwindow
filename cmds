@@ -7,13 +7,15 @@ python ../survexprocessing/parse3ddmp.py --js=leckfell.js --svx=/home/goatchurch
 
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
-// * ? to disappear on startup page
+
+// * write a splash screen instructions list
+// * #blocknamessplash { position: relative; background-color: #cfc; margin-left:auto; margin-right:auto; margin-top:10%; width:80%; height: 200px; text-align:left; overflow: scroll; display: none }
+// * could want this as a tree
+// * ability to reselect outer subblockname
+// * move background video into 
 // * use hash to startup with one of the caves immediately
 // * back to start (reload without hash)
-// * ability to reselect outer subblockname
 // * make selection of subblockname to happen
-// * write a splash screen instructions list
-// * mapping to blockname to cave entrance label selection
 // * make selection value blink occasionally
 
 // * build/deploy script (copies to goatchurch.io and to phone)
@@ -37,6 +39,8 @@ adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
 
 // DONE
+// * mapping to blockname to cave entrance label selection
+// * ? to disappear on startup page
 // * cave entrance to blockname mapping
 // * mapping to blockname to cave entrance selection
 // * then apply to cave entrance selection

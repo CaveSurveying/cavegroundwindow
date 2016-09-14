@@ -22,8 +22,8 @@ var PokeUI = {
             this.touchmovestate = 1; // pre-single move, but don't know direction of drag
         } else if ((event.touches.length == 2) && (this.touchmovestate <= 1)) {
             this.touchStart.set(event.touches[1].pageX - event.touches[0].pageX, event.touches[1].pageX - event.touches[0].pageY); 
-            this.touchmovevalueStart = (bshowvideobackground ? backgroundcamerascale : camera.fov); 
-            quantshowshow("**"); 
+            this.touchmovevalueStart = (PlotGraphics.bshowvideobackground ? PlotGraphics.backgroundcamerascale : PlotGraphics.camera.fov); 
+            quantshowshow("**"+this.touchmovevalueStart); 
             this.touchmovestate = 4; 
         }
         if (this.bdraggsmmode) {
@@ -78,7 +78,7 @@ var PokeUI = {
             }
         } else if (event.touches.length == 2) {  // pinch gesture
             if (this.touchmovestate == 4) {
-                this.touchEnd.set(event.touches[1].pageX - event.touches[0].pageX, event.touches[1].pageX - event.touches[0].pageY); 
+                this.touchEnd.set(event.touches[1].pageX - event.touches[0].pageX, event.touches[1].pageY - event.touches[0].pageY); 
                 touchmovestateN = 4; 
                 touchmovedistance = this.touchStart.length()/this.touchEnd.length(); 
                 if (this.bdraggsmmode)
@@ -95,13 +95,13 @@ var PokeUI = {
                 PlotGeometryObject.setclosedistvalueP(Math.max(minlightdistance, this.touchmovevalueStart - Math.max(1.0, this.touchmovevalueStart)*touchmovedistance*(touchmovedistance < 0 ? 0.02 : 0.005))); 
                 quantshowtextelement.textContent = "Light: "+(PlotGeometryObject.centrelinematerial.uniforms.closedist.value).toFixed(0)+"m"; 
             } else if (touchmovestateN == 4) { 
-                if (bshowvideobackground) {
-                    backgroundcamerascale = this.touchmovevalueStart/touchmovedistance; 
-                    backgroundcamera.projectionMatrix.makeScale(backgroundcamerascale, backgroundcamerascale, backgroundcamerascale); 
-                    quantshowtextelement.textContent = "Backcamm scale: "+backgroundcamerascale.toFixed(2); 
+                if (PlotGraphics.bshowvideobackground) {
+                    PlotGraphics.backgroundcamerascale = this.touchmovevalueStart/touchmovedistance; 
+                    PlotGraphics.backgroundcamera.projectionMatrix.makeScale(PlotGraphics.backgroundcamerascale, PlotGraphics.backgroundcamerascale, PlotGraphics.backgroundcamerascale); 
+                    quantshowtextelement.textContent = "Backcamm scale: "+PlotGraphics.backgroundcamerascale.toFixed(2); 
                 } else {
-                    camera.fov = Math.min(175.0, Math.max(1.0, this.touchmovevalueStart*touchmovedistance)); 
-                    quantshowtextelement.textContent = "FOV: "+camera.fov.toFixed(0)+"deg"; 
+                    PlotGraphics.camera.fov = Math.min(175.0, Math.max(1.0, this.touchmovevalueStart*touchmovedistance)); 
+                    quantshowtextelement.textContent = "FOV: "+PlotGraphics.camera.fov.toFixed(0)+"deg"; 
                 }
             } 
         } else {
