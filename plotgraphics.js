@@ -24,6 +24,7 @@ var PlotGraphics =
         PlotGeometryObject.resizeP(width, height); 
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(width, height);
+        document.getElementById("instructionssplash").style.height = height*0.8+"px"; 
     },
 
     update: function(dt) 

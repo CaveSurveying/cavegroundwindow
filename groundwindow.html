@@ -21,6 +21,8 @@
       #blocknamessplash { position: relative; background-color: #cfc; margin-left:auto; margin-right:auto; margin-top:10%; width:80%; height: 200px; text-align:left; overflow: scroll; display: none }
       #listblocknames { margin:0px; padding:0px; border:thin black solid; }
       #listblocknames li { white-space:pre; }
+      #instructionssplash { position: relative; background-color: #ddd; margin-left:auto; margin-right:auto; margin-top:10%; width:80%; height: 400; text-align:left; overflow: auto; display: none }
+      #instructionssplash h2, #instructionssplash p { margin: 0px;  }
       
     </style>
     <link rel="manifest" href="manifest.json">
@@ -37,7 +39,7 @@
     <div id="main">
       <div id="viz"></div>
       <div id="quantbutton">
-        <input type="button" value="Q" id="qshow"/>
+        <input type="button" value="?" id="qshow"/>
         <span id="debugtext"></span>
       </div>
       <div id="quantshow">
@@ -58,19 +60,38 @@
               <input type="button" value="Top" id="highabove"/>
               <input type="button" value="Drg" id="draggsm"/>
               <input type="button" value="Psg" id="passagesonoff"/>
+              <input type="button" value="Bak" id="pagefront"/>
+              <input type="button" value="?" id="instructionsup"/>
           </div>
         </div>
       </div>
       <div id="choicesplash">
-          <ul id="choicejs">
-          </ul>
+          <ul id="choicejs"></ul>
       </div>
       <div id="blocknamessplash">
-          <ul id="listblocknames">
-          </ul>
+          <ul id="listblocknames"></ul>
       </div>
       <div id="instructionssplash">
-          <h2>Some belated instructions</h2>
+          <h2>Instructions <input type="button" value="hide" id="instructionhide"></h2>
+          <p><b>Groundwindow</b> shows augmented reality view of cave underground projected on a phone according to your GPS and phone orientation.  
+            The orientation to the north depends on gyros and needs to be set by hand using the control ($) below.
+            Looking vertically down shows you two green triangles at your feet pointing north.  
+            When you walk with the device, a line points from the tip in the direction of motion.  </p>
+          <p><b>Hop</b> Hop camera (also can be done by bouncing phone upwards)</p>
+          <p><b>Cen</b> Shift GPS location to the cave, or back to reality</p>
+          <p><b>Mag</b> Try to get the magnetic orientation correct</p>
+          <p><b>See</b> Show the back camera image</p>
+          <p><b>Lab</b> Turn off or on labels</p>
+          <p><b>Top</b> Reorient view to see from above</p>
+          <p><b>Drg</b> Mode for dragging virtual foot position</p>
+          <p><b>Psg</b> Hide LRUD-based passages</p>
+          <p><b>Bak</b> Return to front screen to choose cave</p>
+          <p><b>?</b> This help page</p>
+
+          <p><b>($)</b> <i>Touch then drag right</i> to spin the north orientation</p>
+          <p><i>Touch then drag up or down</i> to change lighting distance</p>
+          <p><i>Two finger touch then pinch</i> to change field of view</p>
+          <p><i>Touch and hold for one second</i> to select a cave section or entrance</p>
       </div>
       <div id="dcamara">
         <video id="camara" autoplay controls></video>
@@ -227,6 +248,9 @@ function init()
     
     document.getElementById("labelsonoff").addEventListener("click", function(event) { PlotGeometryObject.togglelabels(event); }); 
     document.getElementById("passagesonoff").addEventListener("click", function(event) { PlotGeometryObject.togglepassages(event); }); 
+    document.getElementById("instructionsup").addEventListener("click", function(event) { document.getElementById("instructionssplash").style.display = "block"; }); 
+    document.getElementById("instructionhide").addEventListener("click", function(event) { document.getElementById("instructionssplash").style.display = "none"; }); 
+    document.getElementById("pagefront").addEventListener("click", function(event) { window.location.hash = ""; window.location.reload(); }); 
 
     quantshowelement.addEventListener("click", quantshowhide, true); // so that the preventdefault stops it hiding
     document.getElementById("qshow").addEventListener("click", function(event) { quantshowshow(false); }); 
