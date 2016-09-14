@@ -22,6 +22,7 @@
     <link rel="manifest" href="manifest.json">
     <script src="three.min.js"></script>
     <script src="DeviceOrientationControls.js?2"></script>
+    <script src="plotgraphics.js"></script>
     <script src="plottedgeometry.js"></script>
     <script src="positionfuncs.js"></script>
     <script src="pickingfuncs.js"></script>
@@ -98,12 +99,7 @@ function HighTopView()
     PositionObject.geosetdirect(PositionObject.gslongitude, PositionObject.gslatitude, PositionObject.gsaltitude + 100, 0, 0);  
 }
 
-var camera, scene, renderer, controls, threejselement, vizcontainer;
 var quantshowelement, quantshowtextelement, postextelement; 
-var clock = new THREE.Clock();
-var linewidth = 3; 
-
-
 
 var backgroundscene = null, backgroundcamera = null; 
 var videotexture; 
@@ -148,55 +144,21 @@ function LoadVideoBackground()
 }
 
 
-function resize() 
-{
-    var width = vizcontainer.offsetWidth;
-    var height = vizcontainer.offsetHeight;
-    camera.aspect = width / height;
-    PlotGeometryObject.resizeP(width, height); 
-    camera.updateProjectionMatrix();
-    renderer.setSize(width, height);
-}
 
-function update(dt) 
-{
-    resize();
-    camera.updateProjectionMatrix();
-    controls.update(dt);
-}
 
-function render(dt) 
-{
-    renderer.autoClear = false; 
-    renderer.clear(); 
-    if (bshowvideobackground && backgroundscene) {
-        if (backgroundvideo.readyState === backgroundvideo.HAVE_ENOUGH_DATA) {
-            videotexture.needsUpdate = true; 
-        }
-        renderer.render(backgroundscene, backgroundcamera);
-    }
-    renderer.render(scene, camera);
-}
 
-var yeartimestep = 0; 
 function animate(t) 
 {
     PositionObject.SetCameraPositionG(); // mainly to get the hop value
     requestAnimationFrame(animate);
-    if  ((PokeUI.touchmovestate == 1) && (clock.elapsedTime - PokeUI.touchtime > 1)) {
+    if  ((PokeUI.touchmovestate == 1) && (PlotGraphics.clock.elapsedTime - PokeUI.touchtime > 1)) {
         PokeUI.touchmovestate = 5; 
         PickingObject.selecteffort(PokeUI.touchStart.x, PokeUI.touchStart.y, "fromanimate")
     }
-    var cd = clock.getDelta(); 
-    if (yeartimestep != 0) {
-        PlotGeometryObject.centrelinematerial.uniforms.yeartime.value = Math.min(PlotGeometryObject.maxyearvalue+1, Math.max(PlotGeometryObject.minyearvalue, PlotGeometryObject.centrelinematerial.uniforms.yeartime.value + cd*yeartimestep)); 
-        document.getElementById("yearcycle").value = PlotGeometryObject.centrelinematerial.uniforms.yeartime.value; 
-        if ((PlotGeometryObject.centrelinematerial.uniforms.yeartime.value >= PlotGeometryObject.maxyearvalue+1) && (yeartimestep > 0))
-            yeartimestep = 0; 
-    }
+    var cd = PlotGraphics.clock.getDelta(); 
     
-    update(cd);
-    render(cd);
+    PlotGraphics.update(cd);
+    PlotGraphics.render(cd);
 }
 
 function tryabsoluteorient(event)
@@ -258,29 +220,9 @@ var minlightdistance = 10;
 var fardistance = 70000; 
 function init() 
 {
-    renderer = new THREE.WebGLRenderer();
-    threejselement = renderer.domElement;
-    vizcontainer = document.getElementById('viz');
-    vizcontainer.appendChild(threejselement);
-    
-    scene = new THREE.Scene();
-    PlotGeometryObject.scene = scene; 
-    var fieldofview = 30; // degrees (smaller is more tunnel like)
-    var aspect = 1;       // reset in resize()
-    camera = new THREE.PerspectiveCamera(fieldofview, aspect, neardistance, fardistance);
-    camera.position.set(0, 0, 0); 
-    scene.add(camera); 
-
-    controls = new THREE.DeviceOrientationControls(camera, true);
-    controls.connect();
-    controls.update();
-
+    PlotGraphics.init(); 
     window.addEventListener('keydown', function(event) { PokeUI.keydowncontrols(event); });
 
-    
-    var light = new THREE.PointLight(0xffffff);
-    light.position.set(0, 2500, 0);
-    scene.add(light);
 
     if (svx3d.cumupassagexcsseq !== undefined)
         PlotGeometryObject.LoadPassageTubesP(svx3d.cumupassagexcsseq, svx3d.passagexcs, 1.0/svx3d.scale); // before centrelines because they overwrite in the depth buffer
@@ -293,15 +235,15 @@ function init()
     
     PlotGeometryObject.setredalts(PlotGeometryObject.redalt, PlotGeometryObject.vfac); 
  
-    PositionObject.LoadTrail(scene); 
+    PositionObject.LoadTrail(PlotGraphics.scene); 
     //PositionObject.LoadTrailRods(scene); 
     
 
-    PositionObject.LoadFootpos(scene); 
+    PositionObject.LoadFootpos(PlotGraphics.scene); 
     //PositionObject.LoadPickPos(scene); 
     //LoadVideoBackground(); 
     
-    scene.fog = new THREE.Fog(0x202020, 10, 20000);  // near and far
+    PlotGraphics.scene.fog = new THREE.Fog(0x202020, 10, 20000);  // near and far
         
     document.getElementById("camerahop").addEventListener("click", function() { PositionObject.ZhopGo(1500); }); 
     document.getElementById("reset31").addEventListener("click", reset31); 
@@ -313,21 +255,19 @@ function init()
     document.getElementById("labelsonoff").addEventListener("click", function(event) { PlotGeometryObject.togglelabels(event); }); 
     document.getElementById("passagesonoff").addEventListener("click", function(event) { PlotGeometryObject.togglepassages(event); }); 
 
-    //document.getElementById("yearcycle").addEventListener("click", function(event) { yeartimestep = (yeartimestep == -1.0 ? 1.0 : -1.0); }); 
-
     quantshowelement.addEventListener("click", quantshowhide, true); // so that the preventdefault stops it hiding
     document.getElementById("qshow").addEventListener("click", function(event) { quantshowshow(false); }); 
 
-    vizcontainer.addEventListener('touchstart',  function(event) { PokeUI.touchstartfunc(event) }, false);
-    vizcontainer.addEventListener('touchend',    function(event) { PokeUI.touchendfunc(event) }, false);
-    vizcontainer.addEventListener('touchcancel', function(event) { PokeUI.touchendfunc(event) }, false);
-    vizcontainer.addEventListener('touchmove',   function(event) { PokeUI.touchmovefunc(event) }, false);
-    vizcontainer.addEventListener('contextmenu', function(event) { PokeUI.touchholdfunc(event) }, false); 
+    PlotGraphics.vizcontainer.addEventListener('touchstart',  function(event) { PokeUI.touchstartfunc(event) }, false);
+    PlotGraphics.vizcontainer.addEventListener('touchend',    function(event) { PokeUI.touchendfunc(event) }, false);
+    PlotGraphics.vizcontainer.addEventListener('touchcancel', function(event) { PokeUI.touchendfunc(event) }, false);
+    PlotGraphics.vizcontainer.addEventListener('touchmove',   function(event) { PokeUI.touchmovefunc(event) }, false);
+    PlotGraphics.vizcontainer.addEventListener('contextmenu', function(event) { PokeUI.touchholdfunc(event) }, false); 
 
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', function() { PlotGraphics.resize() });
     window.addEventListener('devicemotion', function(event) { PokeUI.devorientationevent(event) }, false);
 
-    setTimeout(resize, 1);
+    setTimeout(function() { PlotGraphics.resize() }, 1);
 }
 
 function LoadScript(jsname)
@@ -376,7 +316,7 @@ function LoadSvx3dList(lsvx3dlist)
 }
 
 initelements(); 
-LoadScript('svx3dlist.js'); 
+LoadScript('svx3dlist.js');  
 
 
 

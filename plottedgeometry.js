@@ -191,7 +191,7 @@ var PlotGeometryObject =
             side: THREE.DoubleSide
         }); 
         this.enttriangles = new THREE.Mesh(this.entgeometry, this.enttrianglematerial);  
-        scene.add(this.enttriangles); 
+        this.scene.add(this.enttriangles); 
 
         this.entlabelscard = new THREE.Object3D();
         for (var i = 0; i < nentrances; i++) {

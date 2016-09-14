@@ -7,7 +7,9 @@ python ../survexprocessing/parse3ddmp.py --js=leckfell.js --svx=/home/goatchurch
 
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
-// 
+// * ? to disappear on startup page
+// * use hash to startup with one of the caves immediately
+// * back to start (reload without hash)
 // * ability to reselect outer subblockname
 // * make selection of subblockname to happen
 // * write a splash screen instructions list

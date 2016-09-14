@@ -41,9 +41,9 @@ var PickingObject = {
             // find closest entrance position
             if (this.isvxents < svx3d.nentrances) {
                 this.vStart.fromArray(PlotGeometryObject.entgeometry.attributes.position.array, this.isvxents*9);
-                this.vStart.project(camera); 
+                this.vStart.project(PlotGraphics.camera); 
                 if (this.vStart.z > 0.0) {
-                    var dx = (this.vStart.x - this.selectposx)*camera.aspect
+                    var dx = (this.vStart.x - this.selectposx)*PlotGraphics.camera.aspect
                     var dy = this.vStart.y - this.selectposy; 
                     var dsq = dx*dx + dy*dy; 
                     if ((this.minisvxents == -1) || (dsq < this.minsvxentdsq)) {
@@ -57,12 +57,12 @@ var PickingObject = {
                 var i = this.isvxents - svx3d.nentrances; 
                 this.vStart.fromArray(PlotGeometryObject.centrelinebuffergeometry.attributes.position.array, i*6);
                 this.vEnd.fromArray(PlotGeometryObject.centrelinebuffergeometry.attributes.position.array, i*6+3);
-                this.vStart.project(camera); 
-                this.vEnd.project(camera); 
+                this.vStart.project(PlotGraphics.camera); 
+                this.vEnd.project(PlotGraphics.camera); 
                 if ((this.vStart.z > 0.0) && (this.vEnd.z > 0.0)) {
-                    var dx = (this.selectposx - this.vStart.x)*camera.aspect; 
+                    var dx = (this.selectposx - this.vStart.x)*PlotGraphics.camera.aspect; 
                     var dy = this.selectposy - this.vStart.y; 
-                    var vx = (this.vEnd.x - this.vStart.x)*camera.aspect; 
+                    var vx = (this.vEnd.x - this.vStart.x)*PlotGraphics.camera.aspect; 
                     var vy = this.vEnd.y - this.vStart.y; 
                     var vsq = vx*vx + vy*vy; 
                     var ddv = dx*vx + dy*vy; 
@@ -124,7 +124,7 @@ var PickingObject = {
         quantshowshow("SELECT("+px+","+py+") "+sesource); 
         this.selectposx = (px/window.innerWidth)*2 - 1; 
         this.selectposy = -(py/window.innerHeight)*2 + 1; 
-        this.pickray.setFromCamera({x:this.selectposx, y:this.selectposy}, camera); 
+        this.pickray.setFromCamera({x:this.selectposx, y:this.selectposy}, PlotGraphics.camera); 
         var ray = this.pickray.ray; 
         var rfac = 150.0; 
         if (PositionObject.pickposmesh) {

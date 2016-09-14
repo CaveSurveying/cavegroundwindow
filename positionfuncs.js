@@ -166,7 +166,7 @@ var PositionObject =
             this.hopheight = lhopheight; 
         this.hopmode = (this.hopmode == 0 ? 1 : -1); 
         document.getElementById("camerahop").className = "selected"; 
-        this.hoptime = clock.elapsedTime; 
+        this.hoptime = PlotGraphics.clock.elapsedTime; 
     }, 
 
     Zhopdisplacement: function() 
@@ -177,7 +177,7 @@ var PositionObject =
             return this.hopheight; 
         if (this.hoptime === null)
             return 0.0; 
-        var hsecs = clock.elapsedTime - this.hoptime; 
+        var hsecs = PlotGraphics.clock.elapsedTime - this.hoptime; 
         if (hsecs > 2) {
             this.hoptime = null; 
             this.hopmode = (this.hopmode == 1 ? 2 : 0); 
@@ -214,8 +214,8 @@ var PositionObject =
         var z = ralt; 
         console.assert((x !== undefined) && (x !== NaN)); 
         this.cameraactualposition.set(-(x+this.gsmdisplacementx), (z+this.gsmdisplacementz), (y+this.gsmdisplacementy)); 
-        if (camera !== undefined) 
-            camera.position.set(this.cameraactualposition.x, this.cameraactualposition.y+this.Zhopdisplacement(), this.cameraactualposition.z); 
+        if (PlotGraphics.camera !== undefined) 
+            PlotGraphics.camera.position.set(this.cameraactualposition.x, this.cameraactualposition.y+this.Zhopdisplacement(), this.cameraactualposition.z); 
     }, 
 
     geo_success: function(position) 
