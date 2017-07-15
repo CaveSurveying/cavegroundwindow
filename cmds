@@ -1,8 +1,9 @@
-http://tinyurl.com/jzjxvmu  is http://goatchurchprime.github.io/cardboardlike/groundwindow.html
 
 dump3d maxpleasure2.3d | ../survexprocessing/parse3ddmp.py -s --js=maxpleasure2.js 
 python ../survexprocessing/parse3ddmp.py --js=test.js --svx=test.svx￼Q
 python ../survexprocessing/parse3ddmp.py --js=leckfell.js --svx=/home/goatchurch/caving/NorthernEngland/ThreeCountiesArea/survexdata/all.svx
+
+python parse3ddmp.py -x ~/data/expodata/loser/all.svx -j caves/all.js
 
 
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
