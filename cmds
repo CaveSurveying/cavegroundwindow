@@ -3,18 +3,28 @@ dump3d maxpleasure2.3d | ../survexprocessing/parse3ddmp.py -s --js=maxpleasure2.
 python ../survexprocessing/parse3ddmp.py --js=test.js --svx=test.svx￼Q
 python ../survexprocessing/parse3ddmp.py --js=leckfell.js --svx=/home/goatchurch/caving/NorthernEngland/ThreeCountiesArea/survexdata/all.svx
 
+
+
 python parse3ddmp.py -x ~/data/expodata/loser/all.svx -j caves/all.js
 
 
+
+
+adb shell: to get onto the filesystem
+
 adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
+on the S5
+adb push groundwindow.html /storage/self/primary/groundwindow
+to get to the webpage it's
+file:///storage/emulated/0/groundwindow/groundwindow.html
 
-// * write a splash screen instructions list
+// * legindexes could use negative index if it is duplicated
+
 // * #blocknamessplash { position: relative; background-color: #cfc; margin-left:auto; margin-right:auto; margin-top:10%; width:80%; height: 200px; text-align:left; overflow: scroll; display: none }
 // * could want this as a tree
 // * ability to reselect outer subblockname
 // * move background video into 
-// * use hash to startup with one of the caves immediately
 // * back to start (reload without hash)
 // * make selection of subblockname to happen
 // * make selection value blink occasionally
@@ -24,13 +34,14 @@ adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 // * move more code into JS files
 // * light up the entrance labels that match as well
 
+
+
 // * unhosted.org
 
 // * do Philip's conversion stuff
 // * conversion code to note multiple node names for a node
 
 // * separate makefiles for the svx on loser and on leckfell
-// * other peaks in view into database (put them into the svx files as visible peaks if possible???)
 // * provide option of which cave data to load
 // * make the camera view slightly faded (would require special shader rather that basicmaterial)
 // * small hops and sideways hops (in relation to the screen, poss using the accelerometer)
@@ -40,6 +51,9 @@ adb push groundwindow.html /storage/emulated/legacy/groundwindow/
 
 
 // DONE
+// * use hash to startup with one of the caves immediately
+// * other peaks in view into database (put them into the svx files as visible peaks if possible???)
+// * write a splash screen instructions list
 // * mapping to blockname to cave entrance label selection
 // * ? to disappear on startup page
 // * cave entrance to blockname mapping

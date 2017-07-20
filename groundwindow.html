@@ -13,6 +13,7 @@
       input.selected { background-color: #8e8; } 
       #postext { position: relative; left: 0; top: 0; display: block }
       #postext input, #quantbutton input { font-size: 150%} 
+	  #numpanel span:hover { background:#ffc; cursor: pointer }
       #dcamara { position: absolute; left: 0; bottom: 0; width:50%; height:50%; display: none; background: red }
       #camara { width:100%; height:100%; }
       #choicesplash { position: relative; background-color: #fcc; margin-left:auto; margin-right:auto; margin-top:10%; width:80%; display:block; text-align:center; }
@@ -46,10 +47,10 @@
         <div id="quantshowtext">TEE</div>
         <div id="postext">
           <div id="numpanel">
-              <span id="gpsrec">Dgps</span>
-              <span id="gpsrecV">Dgps</span>
-              <span id="testout">:</span>
-              <span id="testout2">__</span>
+              <span id="gpsrec" title="Lat-Lng (~Accuracy m) Alt (~Accuracy m)">Dgps</span>
+              <span id="gpsrecV" title="GPS speed m/s, heading (degrees)">Dgps</span>
+              <span id="testout"title="Debug trail geometry: point# x,y,z">:</span>
+              <span id="testout2" title="Geo request count (E for error)">__</span>
           </div>
           <div>
               <input type="button" value="Hop" id="camerahop"/>
@@ -231,7 +232,8 @@ function init()
  
     PositionObject.LoadTrail(PlotGraphics.scene); 
     //PositionObject.LoadTrailRods(scene); 
-    
+
+	PositionObject.geoidaltitude = svx3d.geoidaltitude||0; 
 
     PositionObject.LoadFootpos(PlotGraphics.scene); 
     //PositionObject.LoadPickPos(scene); 
@@ -323,10 +325,9 @@ initelements();
 LoadScript('svx3dlist.js');  // this then callsback to LoadSvx3dList()
 
 
-
 // add GPS reader to this or do fake positions
 // [must put anonymous functions in here to get this=obect rather than PositionObject.geo_success pointer directly which gets this=Window]
-var watchID = navigator.geolocation.watchPosition(function(p) { PositionObject.geo_success(p); }, function() { PositionObject.geo_error(); }, { enableHighAccuracy:true, timeout:17000, maximumAge:20000 }); 
+var watchID = navigator.geolocation.watchPosition(function(p) { PositionObject.geo_success(p); }, function() { PositionObject.geo_error(); }, { enableHighAccuracy:true, timeout:17000, maximumAge:0 }); 
 //fakegpsgenerator(); // for desktop use
 
   </script>

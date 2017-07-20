@@ -9,6 +9,7 @@ var PositionObject =
     gslatitude: 0, 
     gslongitude: 0, 
     gsaltitude: 0,
+    geoidaltitude: 0, // wgs84 altitude (from html5) to msl altitude correction at cave location
     
     gsmdisplacementx: 0,
     gsmdisplacementy: 0, 
@@ -221,10 +222,11 @@ var PositionObject =
     geo_success: function(position) 
     { 
         if (this.geosuccesscount == 0) {
-            var earthrad = 6378137; 
+            var earthrad = 6378137; // official wgs84 value
             var nyfac = 2*Math.PI*earthrad/360; 
             var exfac = nyfac*Math.cos(this.gslatitude*Math.PI/180); 
-            svxviewcurrentgps = { latp0: position.coords.latitude, lngp0: position.coords.longitude, altp0: position.coords.altitude, 
+            svxviewcurrentgps = { latp0: position.coords.latitude, lngp0: position.coords.longitude, 
+                                  altp0: (position.coords.altitude ? position.coords.altitude+this.geoidaltitude : position.coords.altitude), 
                                   nyfac: nyfac, nxfac: 0, eyfac: 0, exfac: exfac }; 
         }
         this.geosuccesscount++; 
@@ -262,10 +264,10 @@ var PositionObject =
         this.geosetdirect(position.coords.longitude, position.coords.latitude, (position.coords.altitude != 0 ? position.coords.altitude : undefined), position.coords.accuracy, position.coords.altitudeAccuracy); 
     },
     
-    geo_error: function() 
+    geo_error: function(positionError) 
     {
         this.geoerrorcount++; 
-        document.getElementById('gpsrec').textContent = "gps errror"; 
+        document.getElementById('gpsrec').textContent = "gps errror:"+positionError.code+" "+positionError.message; 
         document.getElementById('testout2').textContent = "#E"+(this.geoerrorcount); 
     }
 }
@@ -300,3 +302,4 @@ function callbacknextblock()
         setTimeout(callbacknextblock, 300); 
     }
 }
+

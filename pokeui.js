@@ -136,6 +136,7 @@ var PokeUI = {
     keyaltstep: 10.0, 
     keydowncontrols: function(event)
     {
+        event.stopPropagation(); 
         var mv = { }; 
         if (event.keyCode == 37)       mv[event.shiftKey ? "x" : "rx"] = -1;   // left cursor
         else if (event.keyCode == 39)  mv[event.shiftKey ? "x" : "rx"] = 1;    // right cursor

@@ -28,7 +28,7 @@ var PlotGeometryObject =
     
     textlabelmaterials: [ ], 
 
-    MakeLabel: function(card, text, fillstyle, p, scale)
+    MakeLabel: function(card, text, fillstyle, p, visibledistance, scale)
     {
         var canvas1 = document.createElement('canvas');
         canvas1.width = 256;  canvas1.height = 32; 
@@ -86,7 +86,7 @@ var PlotGeometryObject =
             var xl = -landmark[1]*svxscaleInv, yl=landmark[3]*svxscaleInv, zl=landmark[2]*svxscaleInv; 
             peakpositionbuff.setXYZ(i*3, xl, yl, zl);  peakpositionbuff.setXYZ(i*3+1, xl, yl, zl);  peakpositionbuff.setXYZ(i*3+2, xl, yl, zl); 
             peakcorner[i*3] = 0.0;  peakcorner[i*3+1] = 1.0;  peakcorner[i*3+2] = 2.0; 
-            this.MakeLabel(card, landmarks[i][0], "rgba(255,255,255,0.95)", {x:xl, y:yl, z:zl}, 10); 
+            this.MakeLabel(card, landmarks[i][0], "rgba(255,255,255,0.95)", {x:xl, y:yl, z:zl}, 100000, 10); 
         }
         this.scene.add(card);
         
@@ -171,11 +171,13 @@ var PlotGeometryObject =
         var entpositionbuff = new THREE.BufferAttribute(new Float32Array(nentrances*9), 3); 
         var entcorner = new Float32Array(nentrances*3); 
         var entindex = new Float32Array(nentrances*3); 
+		var entvisibledistance = new Float32Array(nentrances*3); 
         
         this.entgeometry = new THREE.BufferGeometry(); 
         this.entgeometry.addAttribute('position', entpositionbuff); 
         this.entgeometry.addAttribute('pcorner', new THREE.BufferAttribute(entcorner, 1)); 
         this.entgeometry.addAttribute('entindex', new THREE.BufferAttribute(entindex, 1)); 
+        this.entgeometry.addAttribute('entvisibledistance', new THREE.BufferAttribute(entvisibledistance, 1)); 
         this.enttrianglematerial = new THREE.ShaderMaterial({
             uniforms: { trianglesize: {type: 'f', value: 10.0}, 
                         aspect: { type: 'f', value: 1.0 }, 
@@ -200,8 +202,10 @@ var PlotGeometryObject =
             var p = {x:x1, y:y1, z:z1}; 
             entpositionbuff.setXYZ(i*3, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+1, p.x, p.y, p.z);  entpositionbuff.setXYZ(i*3+2, p.x, p.y, p.z); 
             entcorner[i*3] = 0.0;  entcorner[i*3+1] = 1.0;  entcorner[i*3+2] = 2.0; 
-            entindex[i*3] = i; entindex[i*3+1] = i; entindex[i*3+2] = i;
-            this.MakeLabel(this.entlabelscard, legentrances[i*3+1], "rgba(0,200,200,0.95)", p, 0.5);  // rgba(0,200,200,0.95)
+            entindex[i*3] = i; entindex[i*3+1] = i; entindex[i*3+2] = i; 
+var visibledistance = i*2.5; 
+			entvisibledistance[i*3] = visibledistance;  entvisibledistance[i*3+1] = visibledistance;  entvisibledistance[i*3+2] = visibledistance;             
+            this.MakeLabel(this.entlabelscard, legentrances[i*3+1], "rgba(0,200,200,0.95)", p, visibledistance, 0.5);  // rgba(0,200,200,0.95)
         }
         this.scene.add(this.entlabelscard);
     },

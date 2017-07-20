@@ -179,8 +179,10 @@ void main()
   <script id="vertex_shader_enttriangle" type="x-shader/x-vertex">
 uniform float trianglesize; 
 uniform float aspect; 
+uniform float closedist; 
 attribute float pcorner; 
 attribute float entindex; 
+attribute float entvisibledistance; 
 varying float altitude; 
 varying float vcosslope; 
 varying float vindex; 
@@ -191,11 +193,17 @@ void main()
     vindex = entindex;  
     vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
     gl_Position = projectionMatrix * mvPosition; 
-    float strianglesize = trianglesize*gl_Position.z*10.0; 
+    
+	float fdepth = gl_Position.z; // why no /w?
+    float strianglesize = trianglesize*gl_Position.z*1.0; 
+    if ((fdepth < closedist) || (fdepth < entvisibledistance))
+		strianglesize *= 10.0; // make big
+    
     if (pcorner != 0.0) {
         gl_Position.y += strianglesize*aspect; 
         gl_Position.x += (pcorner == 1.0 ? 1.0 : -1.0) * 0.57735*strianglesize*0.5; 
     }
+    
 }
   </script>
   

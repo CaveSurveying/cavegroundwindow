@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# This is your main conversion from 3d files to javascript code with passage tubes
+
 import re, datetime, time, math, os, sys, json, tempfile
 from collections import namedtuple
 
@@ -416,6 +418,24 @@ def findallocateentrects(blocknames, legnodesdict, nodes):
     return entrecs, entrecblockstarts
 
 
+# geoid correction from wgs84 ellipsoid altitude to MSL
+# ./geographiclib-get-geoids.sh minimal  (might have to move the files to /usr/local/share/GeographicLib
+# https://geographiclib.sourceforge.io/html/geoid.html
+def GetWGSGeoidcorrection(lng, lat):
+	f = os.popen('GeoidEval --input-string "%f %f"' % (lng, lat))
+	res = f.read().strip()
+	print("Geoid made at", res)
+	if res:
+		return float(res)
+	print("GeoidEval not installed or not working")
+	if -6 <= lng <= 2 and 49 <= lat <= 59:
+		return -48 # for yorkshire
+	if 9 <= lng <= 17 and 46 <= lat <= 48:
+		return -20 # for salzburg
+	print("Geoideval can't be guessed outside of Austria or UK")
+	return 0
+
+
 # main case with further libraries loaded and some command line help stuff
 if __name__ == "__main__":
     from optparse import OptionParser
@@ -427,7 +447,7 @@ if __name__ == "__main__":
     parser.add_option("-s", "--streamdump", dest="streamdmp",  default=False,action="store_true", help="Stream dmp from stdin")
     parser.add_option("-j", "--js",         dest="js",         metavar="FILE",                    help="Output js version 3d file")
     parser.add_option("-c", "--streamjs",   dest="streamjs",   default=False,action="store_true", help="Stream js to stdout")
-    parser.description = "Analyses or processes survex 3D file to do things with the passages"
+    parser.description = "Analyses or processes survex 3D file to do things with the passages\n(station beginning with 'fbmap_' should be mountaintops)"
     parser.epilog = "Best way to execute: dump3d yourcave.3d | ./parse3ddmp.py -s -r \n"
     
     # Code is here: https://bitbucket.org/goatchurch/survexprocessing
@@ -512,7 +532,7 @@ if __name__ == "__main__":
         
         lngp0, latp0 = proj(svxp0[0], svxp0[1], inverse=True)
         fout.write('    "cs": "%s",\n' % (dmp3d.cs))
-        fout.write('    "lngp0": %f, "latp0": %f, "altp0": %f,\n' % (lngp0, latp0, svxp0[2]))
+        fout.write('    "lngp0": %f, "latp0": %f, "altp0": %f, "geoidaltitude": %f,\n' % (lngp0, latp0, svxp0[2], GetWGSGeoidcorrection(lngp0, latp0)))
 
         #earthrad = 6378137; 
         #nyfac = 2*math.pi*earthrad/360; 
@@ -543,7 +563,7 @@ if __name__ == "__main__":
     fout.write('    "legentrances": [%s],\n' % ",".join('%d,"%s","%s"' % entrec  for entrec in entrecs))
     
     fout.write('    "landmarks": [')
-    landmarks = [node  for node in dmp3d.nodes  if re.search("landmark_[^.]*$", node[1])]
+    landmarks = [node  for node in dmp3d.nodes  if re.search("(?:fbmap|landmark)_[^.]*$", node[1])]
     for i, node in enumerate(landmarks):
         landmarkname = node[1].split(".")[-1]
         landmarkname = landmarkname.split("_")
