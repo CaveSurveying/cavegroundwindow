@@ -25,8 +25,9 @@ var PlotGeometryObject =
 
     passagetubematerial: null,
     passagetubes: null, 
-    
-    textlabelmaterials: [ ], 
+
+// should get rid of this and use entlabelscard.children[i].material instead
+    textlabelmaterials: [ ], // 
 
     MakeLabel: function(card, text, fillstyle, p, visibledistance, scale)
     {
@@ -340,7 +341,24 @@ var visibledistance = i*2.5;
             this.textlabelmaterials[i].uniforms.closedist.value = closedistvalue; 
         if (this.enttrianglematerial) 
             this.enttrianglematerial.uniforms.closedist.value = closedistvalue; 
+this.Dsetentvisibility(closedistvalue); 
     }, 
+
+entproj: new THREE.Vector4(), 
+Dsetentvisibility: function(closedistvalue) {
+	for (var i = 0; i < svx3d.nentrances; i++) {
+		this.entproj.fromArray(PlotGeometryObject.entgeometry.attributes.position.array, i*9); 
+		this.entproj.setW(1.0); 
+		var mvPosition = this.entproj.applyMatrix4(PlotGraphics.camera.modelViewMatrix)
+		var glPosition = mvPosition.applyMatrix4(PlotGraphics.camera.projectionMatrix);  
+		var fdepth = glPosition.z; 
+if ((i%50)==0)  console.log(glPosition); 
+		//    vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+		//    gl_Position = projectionMatrix * mvPosition; 
+//if ((i%50)==0)  console.log(this.entproj); 
+		this.entlabelscard.children[i].visible = (fdepth < closedistvalue); 
+	}
+}, 
 
     togglelabels: function(event) {
         if (this.entlabelscard)

@@ -19,7 +19,26 @@ adb push groundwindow.html /storage/self/primary/groundwindow
 to get to the webpage it's
 file:///storage/emulated/0/groundwindow/groundwindow.html
 
+// * sort out the gl_Position to gl_FragCoord conversion where one gets the z value done by dividing z/w before comparing to closedistance
+       then we will have the replication in javascript to get to the same distance thing by: 		this.entproj.fromArray(PlotGeometryObject.entgeometry.attributes.position.array, i*9); 
+		this.entproj.setW(1.0); 
+		var mvPosition = this.entproj.applyMatrix4(PlotGraphics.camera.modelViewMatrix)
+		var glPosition = mvPosition.applyMatrix4(PlotGraphics.camera.projectionMatrix);  
+		var fdepth = glPosition.z; 
+
+// * then we will have the proper conversion of coordinates in javascript which we can use to thin out the labels at source by visibility (in parallel to the wholly webgl one of the triangles marking the entrances
+// we must also simplify the entrance names
+// and do the experimental hilde passage below the basecamp
+
+
+
+// * remove textlabelmaterials and use PlotGeometryObject.entlabelscard.children[i].material instead
+// * make work on blackview phone
+// * shorten labels a lot on the parse3ddump
+// * hide labels by their entvisiblity case
+
 // * legindexes could use negative index if it is duplicated
+// * would be nice to merge all the entrance labels into the same object and texture of all the words
 
 // * #blocknamessplash { position: relative; background-color: #cfc; margin-left:auto; margin-right:auto; margin-top:10%; width:80%; height: 200px; text-align:left; overflow: scroll; display: none }
 // * could want this as a tree

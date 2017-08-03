@@ -174,9 +174,13 @@ console.log("entsec", bentselindexlo, bentselindexhi);
             PlotGeometryObject.enttrianglematerial.uniforms.selindexlo.value = bentselindexlo; 
             PlotGeometryObject.enttrianglematerial.uniforms.selindexhi.value = bentselindexhi; 
         }
+
         
-        for (var i = 0; i < svx3d.nentrances; i++) 
-            PlotGeometryObject.textlabelmaterials[i+svx3d.landmarks.length].uniforms.bselindex.value = (((i >= bentselindexlo) && (i < bentselindexhi)) ? 1.0 : 0.0); 
+// trying to remove the textlabelmaterials list
+        //for (var i = 0; i < svx3d.nentrances; i++) 
+        //    PlotGeometryObject.textlabelmaterials[i+svx3d.landmarks.length].uniforms.bselindex.value = (((i >= bentselindexlo) && (i < bentselindexhi)) ? 1.0 : 0.0); 
+        for (var i = 0; i < PlotGeometryObject.entlabelscard.children.length; i++) 
+            PlotGeometryObject.entlabelscard.children[i].material.uniforms.bselindex.value = (((i >= bentselindexlo) && (i < bentselindexhi)) ? 1.0 : 0.0); 
 
     }
     
