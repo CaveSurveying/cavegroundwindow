@@ -245,7 +245,7 @@ var PositionObject =
                     quantshowshow("Moving GPS origin to the caves as dist="+distcave.toFixed(3)+"km>20km"); 
                     console.log("Moving GPS origin to the caves as dist="+distcave.toFixed(3)+"km>20km"); 
                     document.getElementById("reset31").className = "selected"; 
-                    quantshowhidedelay(4500); 
+                    quantshowhidedelay(9500); 
                 }
             }
             this.geosuccesscountpostsvx++; 
@@ -253,8 +253,8 @@ var PositionObject =
         
         document.getElementById('gpsrec').textContent = "Lat:"+position.coords.latitude.toFixed(7)+" Lng:"+position.coords.longitude.toFixed(7)+
                                                         " (~"+position.coords.accuracy.toFixed(0)+"m)"+
-                                                        " Alt:"+position.coords.altitude.toFixed(1)+
-                                                        " (~"+position.coords.altitudeAccuracy.toFixed(0)+"m)"; 
+                                                        " Alt:"+(position.coords.altitude|0).toFixed(1)+
+                                                        " (~"+(position.coords.altitudeAccuracy|0).toFixed(0)+"m)"; 
         document.getElementById('gpsrecV').textContent = " "+(position.coords.speed|0).toFixed(1)+"m/s "+(position.coords.heading|0).toFixed(1)+"D"; 
         document.getElementById('testout2').textContent = "#"+(this.geosuccesscount); 
 
