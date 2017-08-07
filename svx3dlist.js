@@ -1,8 +1,9 @@
 LoadSvx3dList([
     {"svxname":"CUCC Loser", "svxjs":"caves/expoloser.js"},
-    {"svxname":"all.svx", "svxjs":"caves/all.js"},
-    {"svxname":"Leck Fell Caves", "svxjs":"caves/leckfell.js"},
-    {"svxname":"big china cave", "svxjs":"caves/erin2.js"},
-    {"svxname":"Sky dusky", "svxjs":"caves/skydusky.js"},
     {"svxname":"rectangular test", "svxjs":"test.js"},
+    {"svxname":"OUCC Draenen", "svxjs":"caves/ouccdraenen.js"},
+    {"Dsvxname":"all.svx", "svxjs":"caves/all.js"},
+    {"Dsvxname":"Leck Fell Caves", "svxjs":"caves/leckfell.js"},
+    {"Dsvxname":"big china cave", "svxjs":"caves/erin2.js"},
+    {"Dsvxname":"Sky dusky", "svxjs":"caves/skydusky.js"}
 ]); 
