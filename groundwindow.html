@@ -225,7 +225,7 @@ function init()
         PlotGeometryObject.LoadMountains(svx3d.landmarks, 1.0/svx3d.scale); 
         
     PlotGeometryObject.LoadCentrelines(svx3d.legnodes, svx3d.legindexes, 1.0/svx3d.scale); 
-    if (svx3d.legentrances !== undefined)
+    if ((svx3d.legentrances !== undefined) && (svx3d.legentrances.length != 0))
         PlotGeometryObject.LoadEntrances(svx3d.legnodes, svx3d.legentrances, 1.0/svx3d.scale); 
     
     PlotGeometryObject.setredalts(PlotGeometryObject.redalt, PlotGeometryObject.vfac); 
@@ -282,7 +282,7 @@ function LoadSvx3d(lsvx3d)
     svx3d = lsvx3d; 
     svx3d.scaleInv = 1.0/svx3d.scale; 
     svx3d.nlegs = svx3d.legindexes.length/2; 
-    svx3d.nentrances = svx3d.legentrances.length/3; 
+    svx3d.nentrances = (svx3d.legentrances ? svx3d.legentrances.length/3 : 0); 
 
     init();
     if (svx3d.latp0 !== undefined) {

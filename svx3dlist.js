@@ -1,4 +1,5 @@
 LoadSvx3dList([
+    {"svxname":"Snezhnaya", "svxjs":"caves/snezhnaya.js"},
     {"svxname":"CUCC Loser", "svxjs":"caves/expoloser.js"},
     {"svxname":"rectangular test", "svxjs":"test.js"},
     {"svxname":"OUCC Draenen", "svxjs":"caves/ouccdraenen.js"},

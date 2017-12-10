@@ -267,7 +267,7 @@ var PositionObject =
     geo_error: function(positionError) 
     {
         this.geoerrorcount++; 
-        document.getElementById('gpsrec').textContent = "gps errror:"+positionError.code+" "+positionError.message; 
+        document.getElementById('gpsrec').textContent = "gps errror:"+(positionError && positionError.code)+" "+(positionError && positionError.message); 
         document.getElementById('testout2').textContent = "#E"+(this.geoerrorcount); 
     }
 }

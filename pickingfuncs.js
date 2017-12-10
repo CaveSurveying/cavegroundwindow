@@ -158,7 +158,7 @@ console.log("setselblock ", blockname, bselindexlo, bselindexhi, svx3d.legblocks
 console.log("selxsec ", bselxsecindexlo, bselxsecindexhi, PlotGeometryObject.passagetubematerial.uniforms.selindexlo.value, PlotGeometryObject.passagetubematerial.uniforms.selindexhi.value); 
         }
         
-        if (svx3d.legentrances !== undefined) {
+        if (svx3d.nentrances != 0) {
             var bentselindexlo = 0; 
             while ((bentselindexlo < svx3d.nentrances) && !matchblockname(svx3d.legentrances[bentselindexlo*3+2]))
                 bentselindexlo++; 
