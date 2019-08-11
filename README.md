@@ -1,4 +1,4 @@
-# cavegroundwindow
+# Cave Ground Window
 
 A WebGL/Javascript program for rendering the perspective 3D structures of caves on a tablet or phone in a browser 
 using the device's GPS and orientation sensors to control the viewpoint.  It should seem as if the screen is a window 
@@ -7,6 +7,50 @@ that can see through the ground to the caves underneath.
 For a preview, click on [goatchurchprime.github.io/groundwindow/groundwindow.html](https://goatchurchprime.github.io/groundwindow/groundwindow.html#caves/expoloser.js)
 
 ![alt text](https://raw.githubusercontent.com/CaveSurveyGIS/cavegroundwindow/master/groundwindowpreview.png "ground windo previes")
+
+## Controls
+
+**?** - Show the control panel
+
+**Hop** - Hop up by 500m (also can be done by bouncing phone upwards)
+
+**Cen** - Shift GPS location to the cave, or back to reality
+
+**Mag** - Try to get the magnetic orientation correct
+
+**See** - Show the back camera image
+
+**Lab** - Turn off or on labels
+
+**Top** - Reorient view to see from above
+
+**Drg** - Mode for dragging virtual foot position
+
+**Psg** - Hide LRUD-based passages
+
+**Bak** - Return to front screen to choose cave
+
+**?** - Display help page
+
+*Touch screen then drag right* - to spin the north orientation
+
+*Touch then drag up or down* - to change lighting distance
+
+*Two finger touch then pinch* - to change field of view
+
+*Touch and hold for one second* - to select a cave section or entrance
+
+
+## How it works
+
+This system uses [ThreeJS](https://threejs.org/), which is a widely used interface to WebGL.  WebGL is an interface that 
+gives access to GPU rendering from a javascript browser program.  A GPU is a type of computer processor that can execute 
+small programs called shaders in parallel in order render complex scenes fast enough to use for animation.  
+
+
+
+(In the future it would be great if this system could be combined something that is properly designed, like [Peak Finder](https://www.peakfinder.org).)
+
 
 ## Commands for generating the data files
 
