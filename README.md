@@ -6,6 +6,8 @@ that can see through the ground to the caves underneath.
 
 For a preview, click on [goatchurchprime.github.io/groundwindow/groundwindow.html](https://goatchurchprime.github.io/groundwindow/groundwindow.html#caves/expoloser.js)
 
+![alt text](https://raw.githubusercontent.com/CaveSurveyGIS/cavegroundwindow/master/groundwindowpreview.png "ground windo previes")
+
 ## Commands for generating the data files
 
 ```dump3d maxpleasure2.3d | ../survexprocessing/parse3ddmp.py -s --js=maxpleasure2.js 
